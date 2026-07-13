@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Evolution of Design - 20단계의 기적</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --primary-color: #3b82f6;
+      --bg-color: #ffffff;
+      --card-bg: #ffffff;
+      --text-color: #1f2937;
+      --border-color: #000000;
+      --border-radius: 0px;
+      --box-shadow: 0px 0px 0px rgba(0,0,0,0);
+      --card-gap: 16px;
+      --blur-amount: 0px;
+      --card-border-width: 3px;
+    }
+
+    /* 모든 레이아웃의 색상, 배경 변경에 극도로 부드러운 트랜지션 적용 */
+    body, header, main, div, button, select, p, h1, h2, h3, h4, span {
+      transition: background-color 0.8s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                  border-color 0.8s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                  color 0.5s ease-in-out;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* 야간 모드(Dark Theme) 강제 클래스 */
+    body.dark-mode-theme {
+      --bg-color: #0b0f19;
+      --text-color: #f1f5f9;
+      --card-bg: #1e293b;
+      --border-color: #475569;
+    }
+
+    /* 원시 상태 사각형에 필요한 기본 틀 */
+    .raw-box {
+      border: var(--card-border-width) solid var(--border-color);
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 24px;
+      /* 그림자 실시간 반응성을 확보하기 위해 box-shadow는 transition 대상에서 전격 배제 */
+      transition: background-color 0.5s, 
+                  border-color 0.5s, 
+                  transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* 페인트 폭발용 은은한 오버레이 효과 */
+    #paint-ripple {
+      position: fixed;
+      border-radius: 50%;
+      transform: scale(0);
+      pointer-events: none;
+      z-index: 30;
+      transition: transform 1.2s cubic-bezier(0.1, 0.8, 0.3, 1);
+    }
+
+    /* 2단계 자석 기하학 오브젝트 */
+    #magnet-object {
+      transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), top 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    @keyframes magnet-shaking {
+      0%, 100% { transform: translateX(-50%) rotate(0deg); }
+      15% { transform: translateX(-50%) rotate(-7deg); }
+      30% { transform: translateX(-50%) rotate(6deg); }
+      45% { transform: translateX(-50%) rotate(-5deg); }
+      60% { transform: translateX(-50%) rotate(4deg); }
+      75% { transform: translateX(-50%) rotate(-2deg); }
+    }
+    .magnet-vibrate {
+      animation: magnet-shaking 0.4s ease-in-out infinite;
+    }
+
+    .grid-container {
+      display: grid;
+      gap: var(--card-gap);
+      transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* 안경 블러 연동용 클래스 */
+    .blur-inactive {
+      filter: blur(var(--blur-amount));
+      opacity: 0.5;
+      transition: filter 0.4s ease, opacity 0.4s ease;
+    }
+    .blur-active {
+      filter: blur(0px) !important;
+      opacity: 1 !important;
+      transform: scale(1.04);
+      z-index: 10;
+    }
+
+    /* 20단계 빗자루: 완전한 플랫/미니멀 최종 상태 */
+    .minimal-flat {
+      background: var(--card-bg) !important;
+      border: 1px solid rgba(226, 232, 240, 0.25) !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.025) !important;
+      border-radius: 12px !important;
+      transition: all 0.3s ease !important;
+    }
+    .minimal-flat:hover {
+      transform: translateY(-4px) !important;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* 숨김 및 서서히 노출 처리 */
+    .hidden-initially {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px);
+      transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .visible-step {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    /* 툴팁 말풍선 기하학 정의 */
+    .tooltip-balloon {
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background-color: #1e293b;
+      color: #ffffff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      z-index: 50;
+    }
+    .tooltip-balloon::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 6px;
+      border-style: solid;
+      border-color: #1e293b transparent transparent transparent;
+    }
+    .tooltip-active .tooltip-balloon {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* 20단계 빗자루 시네마틱 영역 */
+    #broom-cinematic-container {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      overflow: hidden;
+      display: none;
+    }
+    @keyframes broom-sweep-across {
+      0% { transform: translate(-100vw, 15vh) rotate(-45deg); }
+      35% { transform: translate(-20vw, -10vh) rotate(15deg); }
+      65% { transform: translate(30vw, -15vh) rotate(-15deg); }
+      100% { transform: translate(120vw, 15vh) rotate(45deg); }
+    }
+    .broom-animating {
+      animation: broom-sweep-across 1.8s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+    }
+    .cinematic-blur-effect {
+      filter: blur(15px);
+      transition: filter 0.8s ease-in-out;
+    }
+
+    /* 0단계 -> 1단계 빨려들어가는 페인트통 효과 전용 스타일 */
+    .paint-bucket-sliding {
+      position: fixed;
+      bottom: -150px;
+      left: -150px;
+      z-index: 50;
+      cursor: pointer;
+      transition: all 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+    .paint-bucket-sliding.active {
+      bottom: 40px;
+      left: 40px;
+    }
+    @keyframes suck-into-box {
+      0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--suck-x), var(--suck-y)) scale(0) rotate(720deg);
+        opacity: 0;
+      }
+    }
+    .paint-bucket-sliding.sucking {
+      animation: suck-into-box 0.8s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8 relative selection:bg-blue-200">
+
+  <!-- 페인트 버스트용 고정 노드 -->
+  <div id="paint-ripple"></div>
+
+  <!-- 2단계: 새로 디자인된 명확한 U자형 클래식 말굽자석 -->
+  <div id="magnet-object" class="fixed left-1/2 -translate-x-1/2 top-[-250px] w-48 h-48 z-40 pointer-events-none filter drop-shadow-2xl">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+      <!-- 말굽모양 실루엣 커브 (N극 빨강, S극 파랑 전도체) -->
+      <!-- 왼쪽 N극 기둥 -->
+      <path d="M20 50 C20 25, 30 15, 50 15 C70 15, 80 25, 80 50 L80 55 C80 55, 60 55, 60 55 L60 50 C60 38, 55 35, 50 35 C45 35, 40 38, 40 50 L40 55 L20 55 Z" fill="#ef4444" />
+      <!-- 오른쪽 절반 S극 오버레이 -->
+      <path d="M50 15 C70 15, 80 25, 80 50 L80 55 L60 55 L60 50 C60 38, 55 35, 50 35 Z" fill="#3b82f6" />
+      
+      <!-- N/S 철제 터미널 엔드 캡 -->
+      <rect x="20" y="55" width="20" height="8" fill="#e2e8f0" rx="1" />
+      <rect x="60" y="55" width="20" height="8" fill="#e2e8f0" rx="1" />
+      
+      <!-- 자기장 전도 기호 텍스트 -->
+      <text x="27" y="51" fill="#ffffff" font-size="9" font-weight="900" font-family="monospace">N</text>
+      <text x="67" y="51" fill="#ffffff" font-size="9" font-weight="900" font-family="monospace">S</text>
+      
+      <!-- 자기장 스파크 에너지선 -->
+      <path d="M30 70 L30 85 M70 70 L70 85 M50 68 L50 90" stroke="#fcd34d" stroke-width="3" stroke-linecap="round" opacity="0" id="magnet-field-lines" />
+    </svg>
+  </div>
+
+  <!-- 빗자루 싹쓸이 연출 노드 -->
+  <div id="broom-cinematic-container">
+    <div id="sweeper-object" class="absolute left-0 top-1/4 w-96 h-96 opacity-90 drop-shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+        <rect x="75" y="5" width="6" height="50" rx="3" transform="rotate(35 75 5)" fill="#b45309" />
+        <ellipse cx="48" cy="46" rx="9" ry="5" transform="rotate(35 48 46)" fill="#d97706" />
+        <path d="M44 48 L20 85 C15 92, 45 98, 55 92 L53 50 Z" fill="#fcd34d" />
+        <path d="M42 52 L26 84" stroke="#d97706" stroke-width="1.5" />
+        <path d="M45 52 L35 88" stroke="#d97706" stroke-width="1.5" />
+        <circle cx="18" cy="90" r="3" fill="#60a5fa" opacity="0.9" />
+        <circle cx="58" cy="85" r="2.5" fill="#10b981" opacity="0.8" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- 토스트 알림창 컨테이너 -->
+  <div id="toast-container" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- 15단계 커튼: 모달 사이드 슬라이더 -->
+  <div id="curtain-overlay" class="fixed inset-y-0 right-0 w-full md:w-96 bg-white dark:bg-slate-800 border-l-4 border-black dark:border-slate-600 z-40 transform translate-x-full transition-transform duration-500 ease-in-out shadow-2xl flex flex-col justify-between p-6">
+    <div>
+      <div class="flex justify-between items-center border-b-2 border-black dark:border-slate-600 pb-4 mb-4">
+        <h3 id="curtain-title" class="text-xl font-black">레이어 상세</h3>
+        <button id="curtain-close" class="text-gray-500 hover:text-black dark:hover:text-white font-bold text-3xl p-1">&times;</button>
+      </div>
+      <div id="curtain-body" class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+        내부 상세 구조 정보 레이어입니다.
+      </div>
+    </div>
+    <div class="bg-gray-100 dark:bg-slate-950 p-4 font-mono text-xs text-gray-500 rounded-md">
+      <p>Step 15: Curtain Layer [Active]</p>
+    </div>
+  </div>
+
+  <!-- 헤더 영역 -->
+  <header class="w-full max-w-5xl mx-auto z-10 flex justify-between items-center py-4 border-b-2 border-black dark:border-slate-700 transition-all duration-700" id="main-header">
+    <div>
+      <h1 class="text-xl md:text-2xl font-black tracking-wider uppercase" id="site-logo">Raw Canvas</h1>
+      <p class="text-xs text-gray-500 mt-1" id="site-subtitle">가장 날것의 상자에서 시작하는 디자인 여행</p>
+    </div>
+    <div class="flex items-center gap-4 text-right">
+      <button id="reset-btn" class="hidden px-2.5 py-1 text-[10px] font-mono font-bold uppercase border border-red-500 text-red-500 hover:bg-red-500 hover:text-white active:scale-95 transition-all rounded-md">
+        Reset
+      </button>
+      <div>
+        <span class="text-xs font-mono bg-black text-white px-2 py-1 uppercase tracking-widest rounded-none transition-all duration-700" id="badge-step">
+          Step 0 / 20
+        </span>
+        <div class="text-xs text-gray-400 mt-1 font-mono" id="progress-percent">0% Evolution</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 0단계 전용: 화면 밖에서 나타나는 슬라이딩 페인트통 도구 -->
+  <div id="paint-bucket-tool" class="paint-bucket-sliding bg-blue-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-white hover:scale-110 active:scale-95 transition-transform" onclick="triggerSuckInAnimation()">
+    <i data-lucide="paint-bucket" class="w-10 h-10 animate-bounce"></i>
+  </div>
+
+  <!-- 메인 워크 랩 -->
+  <main id="main-content-wrap" class="flex-grow w-full max-w-5xl mx-auto flex flex-col justify-center items-center py-8 md:py-16 z-10">
+    
+    <!-- 진화 가이드 피드백 텍스트 -->
+    <div id="guide-message" class="text-center mb-8 max-w-xl transition-all duration-500">
+      <p class="text-lg font-bold text-gray-800 dark:text-white" id="guide-title">완전히 비어 있는 원시 상태입니다.</p>
+      <p class="text-sm text-gray-500 mt-2" id="guide-desc">무언가 일어날 때까지 잠시 기다리거나 상자를 지켜보세요...</p>
+    </div>
+
+    <!-- 카드 뷰포트 영역 상단 우측 야간모드 스위치 위치 -->
+    <div class="w-full flex justify-end pr-2 mb-4">
+      <button id="night-toggle-btn" class="hidden flex items-center gap-1 px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-amber-500 dark:text-sky-400 hover:scale-105 active:scale-95 transition-all text-xs font-bold shadow-sm">
+        <span id="night-toggle-label" class="mr-1">라이트 모드</span>
+        <i data-lucide="sun" id="sun-toggle-icon" class="w-4 h-4"></i>
+        <i data-lucide="moon" id="moon-toggle-icon" class="w-4 h-4 hidden"></i>
+      </button>
+    </div>
+
+    <!-- 핵심 디자인 변화 캔버스 컨테이너 -->
+    <div id="canvas-container" class="w-full flex justify-center items-center min-h-[300px]">
+      
+      <!-- [0단계] 최초 시작 시 보이는 상자 -->
+      <div id="initial-start-box" class="raw-box w-64 h-64 flex flex-col justify-center items-center relative">
+        <span class="text-sm font-black text-gray-800 dark:text-gray-100 uppercase tracking-widest text-center" id="empty-box-text">EMPTY BOX</span>
+        <span class="text-[10px] text-gray-400 mt-2 font-mono" id="empty-box-sub">Ready for Color</span>
+      </div>
+
+    </div>
+
+    <!-- 진화 단계 타임라인 시각 기구 -->
+    <div id="timeline-container" class="w-full mt-12 hidden-initially">
+      <div class="flex justify-between text-xs font-mono text-gray-400 mb-2">
+        <span class="flex items-center gap-1">
+          Evolution Steps 
+          <span id="timeline-unlock-tag" class="hidden text-green-600 bg-green-100 dark:bg-green-950 px-1.5 py-0.5 rounded text-[10px] font-bold animate-pulse">🔓 자유 순간이동 해금됨</span>
+        </span>
+        <span id="timeline-count">0 / 20</span>
+      </div>
+      <div class="w-full bg-gray-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+        <div id="timeline-bar" class="bg-blue-600 h-full w-0 transition-all duration-500"></div>
+      </div>
+      <div class="grid grid-cols-5 md:grid-cols-20 gap-1 mt-2 text-[9px] text-center font-mono text-gray-400" id="timeline-steps-labels">
+        <!-- JS 동적 주입 -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 안내 안내 상세 모달 -->
+  <div id="info-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div id="info-modal-content" class="bg-white dark:bg-slate-800 border-2 border-black dark:border-slate-700 w-full max-w-md p-6 shadow-2xl transform scale-95 transition-transform duration-300 rounded-none relative">
+      <button id="modal-close" class="absolute top-4 right-4 text-gray-400 hover:text-black dark:hover:text-white font-bold text-2xl">&times;</button>
+      <h3 id="modal-title" class="text-lg font-black mb-3 text-gray-900 dark:text-white">제목</h3>
+      <p id="modal-desc" class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6">설명문</p>
+      <div class="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-slate-700">
+        <span id="modal-meta" class="text-[10px] font-mono text-gray-400">Step 정보</span>
+        <button id="modal-confirm" class="px-4 py-1.5 bg-black dark:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider rounded hover:bg-gray-800 dark:hover:bg-slate-600 transition-colors">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- STATE MANAGEMENT ---
+    let currentStep = 0;
+    const maxSteps = 20;
+    
+    let colorPalette = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'];
+    let selectedColor = '#3b82f6';
+    
+    let step2Aligned = false; 
+    let timelineUnlocked = false; 
+    let isDarkMode = false;
+    
+    // 3단계 줄자 슬라이더 조절값
+    let rulerGapVal = 16;
+
+    // 5단계 사포 카드별 둥글기 상태값 누적 저장소
+    let cardRadii = { 1: 0, 2: 0, 3: 0, 4: 0 };
+
+    // 10단계 붓 타이포그래피 스타일값
+    let selectedFontFamily = 'font-sans';
+    let selectedFontWeight = 'font-normal';
+    let selectedFontSize = 'text-xs';
+
+    // 12단계 활성(Active) 상태 변수
+    let activeCardId = null;
+
+    // 16단계 모래시계 시뮬레이터 플래그
+    let isLoadingMode = false;
+
+    // 19단계 고무줄 반응형 시뮬레이터 넓이값
+    let simulatorWidthClass = 'max-w-2xl';
+
+    // 20단계 원형 콘트롤 팝업 활성화 정보
+    let activePopMenu = null; 
+
+    // DOM 참조 변수
+    let canvasContainer, paintBucketTool, paintRipple;
+    let guideTitle, guideDesc, badgeStep, progressPercent, siteLogo, mainHeader;
+    let timelineContainer, timelineBar, timelineCount, timelineStepsLabels, resetBtn, timelineUnlockTag;
+    let infoModal, infoModalContent, modalTitle, modalDesc, modalMeta, modalClose, modalConfirm;
+    let toastContainer, curtainOverlay, curtainTitle, curtainBody, curtainClose;
+    let nightToggleBtn, nightToggleLabel, sunToggleIcon, moonToggleIcon;
+
+    // 20개 진화 단계 데이터베이스 정의
+    const stepsData = [
+      { id: 1, title: "배경색 & 테마", toolName: "페인트통", icon: "paint-bucket", desc: "웹에 영혼을 가미합니다. 상자를 마우스로 '꾹' 누르고 있으면 배경 테마를 감각적인 수면 위로 차올립니다.", actionDesc: "1번 카드를 마우스로 꾹 눌러 게이지를 100% 충전하고 우주의 배경색을 변화시키세요!" },
+      { id: 2, title: "중앙 정렬", toolName: "자석", icon: "magnet", desc: "분산되었던 오브젝트들이 중력에 당기지듯 완벽한 중앙 배치 격자로 정렬을 이룹니다.", actionDesc: "카드가 흩어졌습니다. 말굽자석 정렬 도구를 활성화하여 카드를 무대 중앙으로 끌어당기세요!" },
+      { id: 3, title: "여백·크기", toolName: "줄자", icon: "ruler", desc: "여백의 비율을 조작해 봅니다. 단, 4단계 격자 배치를 마스터하기 전까지는 1차원 세로 방향으로만 정렬되어 있어 상하 간격만 조절됩니다.", actionDesc: "요소 간격 슬라이더가 해금되었습니다. 슬라이더를 밀어 상하 줄자 간격 변화를 확인하세요!" },
+      { id: 4, title: "그리드·배치", toolName: "격자 종이", icon: "layout-grid", desc: "모던 스위스 디자인의 핵심, 가로세로 완벽한 격자 배치가 강제 도입되어 줄자 규격이 동시 반영됩니다.", actionDesc: "그리드가 규합되며 이전 단계에서 세팅한 줄자 여백 간격이 가로세로 격자 공간 레이아웃으로 균형 있게 적용됩니다." },
+      { id: 5, title: "둥근 모서리", toolName: "사포", icon: "pencil-ruler", desc: "사포로 테두리를 미세하게 갈아냅니다. 호버링하고 있을 때 미세한 곡률이 영구히 깎여 나갑니다.", actionDesc: "각 카드 위에 마우스 커서를 올리세요! 둥근 모양 곡률이 빠르게 보강되며 마우스를 떼어도 이 값은 안전히 보존됩니다." },
+      { id: 6, title: "그림자·깊이", toolName: "태양", icon: "sun", desc: "빛의 궤적에 맞춰 그림자가 아주 기민하게 반응하는 3차원 입체감을 구현합니다.", actionDesc: "마우스 커서 이동 속도에 실시간 딜레이 없이 쫀득하게 대응하는 소프트 섀도우 연출을 탐구해 보세요." },
+      { id: 7, title: "야간 모드", toolName: "달", icon: "moon", desc: "눈의 피로를 최소화하는 정밀 다크 모드를 도입합니다.", actionDesc: "무대 바로 우측 상단에 심야 스위치가 설계되었습니다. 클릭 시 모든 공간이 어두운 다크톤으로 부드럽고 매끄럽게 페이드 전환됩니다." },
+      { id: 8, title: "호버 효과", toolName: "커서", icon: "mouse-pointer", desc: "커서가 닿는 대상을 미끄러지듯 고도 위로 부양시킵니다.", actionDesc: "카드에 마우스 포인터를 대면 부드러운 호버 피드백 효과를 전달합니다." },
+      { id: 9, title: "클릭 피드백", toolName: "스프링", icon: "zap", desc: "스프링 탄성 작용을 보강하여 누를 때 아주 쫀득하게 변형되는 물리 애니메이션을 적용합니다.", actionDesc: "카드를 눌렀다 뗄 때 작아지고 커지는 탄력 작용을 끊김 현상 없이 기가 막힌 고프레임 이징으로 경험해 보세요!" },
+      { id: 10, title: "타이포그래피", toolName: "붓", icon: "brush", desc: "서체 유형, 볼드 굵기, 폰트 스케일을 제어하여 텍스트 데이터의 시각 위계를 재정렬합니다.", actionDesc: "상단 타이포 조절기를 이용해 글자 크기, 굵기, 폰트 종류를 완벽하게 변형시켜 보세요." },
+      { id: 11, title: "포인트 색상", toolName: "팔레트", icon: "palette", desc: "웹의 일체감을 이룩하는 브랜드 시그니처 엑센트 색상을 일치시킵니다.", actionDesc: "팔레트 바에서 원하는 강조색을 눌러 카드의 하이라이트 지시등 색상을 변환시키세요." },
+      { id: 12, title: "활성 상태", toolName: "전구", icon: "lightbulb", desc: "사용자가 선택 중인 카드에 밝은 전구 테두리 포커싱 빛을 투사합니다.", actionDesc: "원하는 카드를 선택해 보세요. 활성화된 카드에만 신비로운 전구 테두리 라이트닝 효과가 부착됩니다." },
+      { id: 13, title: "툴팁·설명", toolName: "말풍선", icon: "message-square", desc: "사용자의 궁금증을 해결해 줄 친절한 오버레이 설명 텍스트를 전송합니다.", actionDesc: "카드 위에 마우스를 올리면 세부 비하인드 원리를 담은 도움말 말풍선이 솟아오릅니다." },
+      { id: 14, title: "포커스·블러", toolName: "안경", icon: "glasses", desc: "시각적 분산을 차단하기 위해 사용자가 관측 중인 카드를 제외한 배경을 소프트 포커스로 흩뿌립니다.", actionDesc: "원하는 카드 위에 호버해 보세요. 바라보고 있지 않은 다른 카드들만 실시간으로 우아하게 블러아웃됩니다." },
+      { id: 15, title: "레이어·모달", toolName: "커튼", icon: "panels-right", desc: "우측 수평 슬라이더 커튼 상세 레이어를 부드럽게 연출합니다.", actionDesc: "카드를 클릭하면 우측에서 수려하게 슬라이딩 세부정보판이 미끄러져 들어옵니다." },
+      { id: 16, title: "로딩 상태", toolName: "모래시계", icon: "hourglass", desc: "네트워크 탐색 지연 경험에 유연히 대응하는 스켈레톤 애니메이션입니다.", actionDesc: "조작판의 모래시계 시뮬레이션을 작동시켜 감각적인 가상 뼈대 로딩 모드로 일시 전환해 보세요." },
+      { id: 17, title: "알림·피드백", toolName: "종", icon: "bell", desc: "사용자의 트랜잭션 수신 여부를 토스트 배너로 논블로킹 통보합니다.", actionDesc: "카드를 클릭해 보세요! 상단 중앙에서 가벼운 반응성 토스트 미니 메시지 종이 울립니다." },
+      { id: 18, title: "접근성", toolName: "키보드", icon: "keyboard", desc: "모든 보조 단말기 탐색 경험을 완벽히 지키는 아웃라인 포커싱 가이드입니다.", actionDesc: "Tab 키를 여러 번 눌러 보세요. 포커스 추적기 링이 차례대로 가동됩니다." },
+      { id: 19, title: "반응형 디자인", toolName: "고무줄", icon: "shrink", desc: "뷰포트 폭에 상관없이 균등하게 가변하는 고무줄 유동성 레이아웃입니다.", actionDesc: "단말기 반응 뷰 테스트 버튼을 가공하여 유동적인 그리드 정렬을 제어해 보세요." },
+      { id: 20, title: "정리·일관성", toolName: "빗자루", icon: "brush-broom", desc: "과하게 중첩된 블러, 전구 빛, 그림자를 극도로 현대적인 플랫 미니멀 디자인으로 통일 정돈시킵니다.", actionDesc: "빗자루 대청소 애니메이션과 함께 극단적인 편안함을 선사하는 미니멀리즘 인터페이스로의 변강식!" }
+    ];
+
+    // --- LIFE CYCLE BOOTSTRAP ---
+    window.addEventListener('DOMContentLoaded', () => {
+      canvasContainer = document.getElementById('canvas-container');
+      paintBucketTool = document.getElementById('paint-bucket-tool');
+      paintRipple = document.getElementById('paint-ripple');
+      guideTitle = document.getElementById('guide-title');
+      guideDesc = document.getElementById('guide-desc');
+      badgeStep = document.getElementById('badge-step');
+      progressPercent = document.getElementById('progress-percent');
+      siteLogo = document.getElementById('site-logo');
+      mainHeader = document.getElementById('main-header');
+      timelineContainer = document.getElementById('timeline-container');
+      timelineBar = document.getElementById('timeline-bar');
+      timelineCount = document.getElementById('timeline-count');
+      timelineStepsLabels = document.getElementById('timeline-steps-labels');
+      resetBtn = document.getElementById('reset-btn');
+      timelineUnlockTag = document.getElementById('timeline-unlock-tag');
+
+      infoModal = document.getElementById('info-modal');
+      infoModalContent = document.getElementById('info-modal-content');
+      modalTitle = document.getElementById('modal-title');
+      modalDesc = document.getElementById('modal-desc');
+      modalMeta = document.getElementById('modal-meta');
+      modalClose = document.getElementById('modal-close');
+      modalConfirm = document.getElementById('modal-confirm');
+      toastContainer = document.getElementById('toast-container');
+      curtainOverlay = document.getElementById('curtain-overlay');
+      curtainTitle = document.getElementById('curtain-title');
+      curtainBody = document.getElementById('curtain-body');
+      curtainClose = document.getElementById('curtain-close');
+
+      nightToggleBtn = document.getElementById('night-toggle-btn');
+      nightToggleLabel = document.getElementById('night-toggle-label');
+      sunToggleIcon = document.getElementById('sun-toggle-icon');
+      moonToggleIcon = document.getElementById('moon-toggle-icon');
+
+      // 야간 테마 스위치 이벤트 리스너
+      if (nightToggleBtn) {
+        nightToggleBtn.addEventListener('click', toggleThemeMode);
+      }
+
+      // 모달 수용 제어 연계
+      if (modalClose) modalClose.addEventListener('click', closeModal);
+      if (modalConfirm) modalConfirm.addEventListener('click', closeModal);
+      if (infoModal) {
+        infoModal.addEventListener('click', (e) => {
+          if (e.target === infoModal) closeModal();
+        });
+      }
+      if (curtainClose) {
+        curtainClose.addEventListener('click', () => {
+          if (curtainOverlay) curtainOverlay.classList.add('translate-x-full');
+        });
+      }
+
+      if (resetBtn) {
+        resetBtn.addEventListener('click', triggerFullReset);
+      }
+
+      // 0단계 시작 후 500ms 뒤 페인트통 슬라이딩 등장 연출 기동
+      setTimeout(() => {
+        if (paintBucketTool && currentStep === 0) {
+          paintBucketTool.classList.add('active');
+        }
+      }, 500);
+
+      renderTimelineLabels();
+      lucide.createIcons();
+    });
+
+    // 0단계 -> 1단계 빨려 들어가는 애니메이션 처리
+    function triggerSuckInAnimation() {
+      const tool = document.getElementById('paint-bucket-tool');
+      const targetBox = document.getElementById('initial-start-box');
+
+      if (!tool || !targetBox) return;
+
+      const toolRect = tool.getBoundingClientRect();
+      const boxRect = targetBox.getBoundingClientRect();
+
+      // 타겟 상자 중앙과 페인트통의 거리 측정
+      const destX = (boxRect.left + boxRect.width / 2) - (toolRect.left + toolRect.width / 2);
+      const destY = (boxRect.top + boxRect.height / 2) - (toolRect.top + toolRect.height / 2);
+
+      tool.style.setProperty('--suck-x', `${destX}px`);
+      tool.style.setProperty('--suck-y', `${destY}px`);
+
+      // 흡입 애니메이션 클래스 바인딩
+      tool.classList.add('sucking');
+
+      // 사각형 내부 빨려 들어갈 때의 흔들림 시각 효과 가미
+      setTimeout(() => {
+        targetBox.style.transform = "scale(0.92) rotate(-3deg)";
+        targetBox.style.borderColor = "#2563eb";
+      }, 400);
+
+      setTimeout(() => {
+        // 원래 크기로 튕기며 1단계로 진입
+        targetBox.style.transform = "scale(1.05) rotate(0deg)";
+        setTimeout(() => {
+          targetBox.style.transform = "";
+          targetBox.style.borderColor = "";
+          
+          currentStep = 1;
+          updateEvolution();
+        }, 150);
+      }, 800);
+    }
+
+    // 야간 테마 전환 비즈니스 로직
+    function toggleThemeMode() {
+      isDarkMode = !isDarkMode;
+      applyDarkModeState();
+    }
+
+    function applyDarkModeState() {
+      if (isDarkMode) {
+        document.body.classList.add('dark-mode-theme');
+        if (sunToggleIcon) sunToggleIcon.classList.add('hidden');
+        if (moonToggleIcon) moonToggleIcon.classList.remove('hidden');
+        if (nightToggleLabel) nightToggleLabel.textContent = "다크 모드";
+      } else {
+        document.body.classList.remove('dark-mode-theme');
+        if (sunToggleIcon) sunToggleIcon.classList.remove('hidden');
+        if (moonToggleIcon) moonToggleIcon.classList.add('hidden');
+        if (nightToggleLabel) nightToggleLabel.textContent = "라이트 모드";
+      }
+    }
+
+    // 타임라인 레이블 인덱스 렌더링
+    function renderTimelineLabels() {
+      if (!timelineStepsLabels) return;
+      let html = "";
+      for (let i = 1; i <= maxSteps; i++) {
+        const isCurrent = i === currentStep;
+        const isPassed = i <= currentStep;
+        let colorClass = "text-gray-400 dark:text-gray-600";
+        if (isCurrent) {
+          colorClass = "text-blue-600 dark:text-blue-400 font-black scale-110";
+        } else if (isPassed) {
+          colorClass = "text-slate-800 dark:text-slate-200 font-bold";
+        }
+        
+        let cursorClass = timelineUnlocked ? "cursor-pointer hover:text-blue-500 hover:scale-110 transition-transform" : "cursor-default";
+        let clickHandler = timelineUnlocked ? `onclick="handleTimelineJump(${i})"` : "";
+        
+        html += `
+          <div class="${colorClass} ${cursorClass} flex flex-col items-center justify-center p-0.5" ${clickHandler} title="${stepsData[i-1]?.title || ''}">
+            <span class="text-[9px] md:text-xs">${i}</span>
+          </div>
+        `;
+      }
+      timelineStepsLabels.innerHTML = html;
+    }
+
+    // 타임라인 강제 이동 점프
+    function handleTimelineJump(stepNum) {
+      if (!timelineUnlocked) return;
+      
+      if (stepNum === 20) {
+        triggerBroomCinematic(() => {
+          currentStep = 20;
+          step2Aligned = true;
+          updateEvolution();
+        });
+      } else {
+        currentStep = stepNum;
+        if (currentStep >= 2) {
+          step2Aligned = true; 
+        } else {
+          step2Aligned = false;
+        }
+        updateEvolution();
+      }
+    }
+
+    // 빗자루 클린 시네마틱 효과
+    function triggerBroomCinematic(onCompleteCallback) {
+      const broomContainer = document.getElementById('broom-cinematic-container');
+      const broomObject = document.getElementById('sweeper-object');
+      const mainWrap = document.getElementById('main-content-wrap');
+
+      if (!broomContainer || !broomObject || !mainWrap) return;
+
+      broomContainer.style.display = 'block';
+      broomObject.classList.remove('broom-animating');
+      mainWrap.classList.add('cinematic-blur-effect');
+
+      void broomObject.offsetWidth; // Force reflow
+
+      broomObject.classList.add('broom-animating');
+
+      setTimeout(() => {
+        if (onCompleteCallback) onCompleteCallback();
+      }, 900);
+
+      setTimeout(() => {
+        mainWrap.classList.remove('cinematic-blur-effect');
+        broomContainer.style.display = 'none';
+        broomObject.classList.remove('broom-animating');
+      }, 1800);
+    }
+
+    // 전체 진화 진폭 상태 동기화 관리
+    function updateEvolution() {
+      // 0단계가 아니면 페인트통 슬라이딩 도구 제거
+      if (currentStep > 0 && paintBucketTool) {
+        paintBucketTool.classList.remove('active');
+        setTimeout(() => {
+          paintBucketTool.style.display = 'none';
+        }, 500);
+      }
+
+      // 20단계 완주 시 자유 순간이동 기밀 해금
+      if (currentStep === 20 && timelineUnlockTag) {
+        timelineUnlocked = true;
+        timelineUnlockTag.classList.remove('hidden');
+      }
+
+      if (badgeStep) badgeStep.textContent = `Step ${currentStep} / ${maxSteps}`;
+      if (progressPercent) progressPercent.textContent = `${currentStep * 5}% Evolution`;
+      if (timelineCount) timelineCount.textContent = `${currentStep} / ${maxSteps}`;
+      if (timelineBar) timelineBar.style.width = `${currentStep * 5}%`;
+
+      // 7단계부터 19단계까지 야간 테마 단추 노출 보장 (야간 모드 색 전환은 부드럽게 이뤄지도록 CSS 이징 적용)
+      if (currentStep >= 7) {
+        if (nightToggleBtn) nightToggleBtn.classList.remove('hidden');
+      } else {
+        if (nightToggleBtn) nightToggleBtn.classList.add('hidden');
+      }
+
+      // 사포 다음 진화 완료 시, 네 카드 보더 곡률 영구화 처리
+      if (currentStep >= 6) {
+        cardRadii = { 1: 12, 2: 12, 3: 12, 4: 12 };
+      }
+
+      renderTimelineLabels();
+
+      if (currentStep > 0 && currentStep <= maxSteps && guideTitle && guideDesc) {
+        const currentData = stepsData[currentStep - 1];
+        guideTitle.textContent = `${currentStep}단계: ${currentData.title} 활성화!`;
+        guideDesc.textContent = currentData.actionDesc;
+        guideTitle.classList.remove('text-blue-600');
+        guideTitle.classList.add('text-gray-800', 'dark:text-white');
+      }
+
+      if (currentStep > 0 && resetBtn && timelineContainer) {
+        resetBtn.classList.remove('hidden');
+        timelineContainer.classList.add('visible-step');
+        timelineContainer.classList.remove('hidden-initially');
+      }
+
+      if (currentStep >= 1 && siteLogo && mainHeader) {
+        siteLogo.textContent = "Creative Sandbox";
+        siteLogo.className = "text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-sky-400 dark:to-indigo-400";
+        mainHeader.classList.remove('border-black');
+        mainHeader.classList.add('border-slate-200', 'dark:border-slate-700');
+      }
+
+      renderCanvas();
+    }
+
+    // 1단계 배경테마를 꾹 누르고 있을 때의 충전 인터랙션 초기화 전용 함수
+    function bindStep1HoldEvent() {
+      const box1 = document.getElementById('box-1');
+      const holdFiller = document.getElementById('hold-filler');
+      const stageSuccessMark = document.getElementById('stage-success-mark');
+      const stageInnerWrapper = document.getElementById('stage-inner-wrapper');
+      
+      if (!box1 || !holdFiller) return;
+
+      let holdTimer = null;
+      let progress = 0;
+
+      const startHolding = (e) => {
+        e.preventDefault();
+        if (holdTimer) clearInterval(holdTimer);
+        
+        holdTimer = setInterval(() => {
+          if (progress < 100) {
+            progress += 3; // 충전 속도 상향
+            holdFiller.style.transform = `scaleY(${progress / 100})`;
+          } else {
+            clearInterval(holdTimer);
+            holdTimer = null;
+            
+            // 100% 도달 연출 개시
+            stageInnerWrapper.classList.add('opacity-0');
+            stageSuccessMark.classList.remove('hidden');
+            setTimeout(() => {
+              stageSuccessMark.classList.remove('scale-0');
+              stageSuccessMark.classList.add('scale-100');
+            }, 50);
+
+            // 페인트 버스트 웨이브 확장
+            paintRipple.style.left = `50%`;
+            paintRipple.style.top = `50%`;
+            paintRipple.style.backgroundColor = isDarkMode ? '#1e1b4b' : '#eff6ff';
+            paintRipple.style.transform = 'scale(150)';
+
+            setTimeout(() => {
+              if (!isDarkMode) {
+                document.body.style.backgroundColor = '#f1f5f9';
+              }
+              paintRipple.style.transform = 'scale(0)';
+              advanceStep(1); // 다음 단계인 2단계 자석으로 자동 진출을 준비
+            }, 800);
+          }
+        }, 20);
+      };
+
+      const stopHolding = () => {
+        if (holdTimer) {
+          clearInterval(holdTimer);
+          holdTimer = null;
+        }
+        let drain = setInterval(() => {
+          if (progress > 0) {
+            progress -= 6;
+            if (progress < 0) progress = 0;
+            holdFiller.style.transform = `scaleY(${progress / 100})`;
+          } else {
+            clearInterval(drain);
+          }
+        }, 15);
+      };
+
+      box1.addEventListener('mousedown', startHolding);
+      box1.addEventListener('touchstart', startHolding);
+      window.addEventListener('mouseup', stopHolding);
+      window.addEventListener('touchend', stopHolding);
+      box1.addEventListener('mouseleave', stopHolding);
+    }
+
+    // 가상 돔 캔버스 메인 드로잉 함수
+    function renderCanvas() {
+      if (!canvasContainer) return;
+
+      if (currentStep === 0) {
+        // 0단계 원시 프레임 출력
+        canvasContainer.innerHTML = `
+          <div id="initial-start-box" class="raw-box w-64 h-64 flex flex-col justify-center items-center relative">
+            <span class="text-sm font-black text-gray-800 dark:text-gray-100 uppercase tracking-widest text-center" id="empty-box-text">EMPTY BOX</span>
+            <span class="text-[10px] text-gray-400 mt-2 font-mono" id="empty-box-sub">Ready for Color</span>
+          </div>
+        `;
+        return;
+      }
+
+      if (currentStep === 1) {
+        // 1단계 전용: 오로지 '1. 배경테마' 카드 단 하나만 단독 정 중앙 배치
+        canvasContainer.innerHTML = `
+          <div id="box-1" class="raw-box w-72 h-72 flex flex-col justify-center items-center relative cursor-pointer overflow-hidden shadow-md select-none">
+            <!-- 꾹 누르기 에너지 충전 게이지 막 -->
+            <div id="hold-filler" class="absolute inset-0 bg-blue-100 dark:bg-blue-900/50 w-full origin-bottom scale-y-0 transition-transform duration-75"></div>
+            
+            <!-- 체크 가이드 마크 노드 -->
+            <div id="stage-success-mark" class="absolute hidden flex-col items-center gap-1.5 z-20 text-green-500 scale-0 transition-transform duration-500">
+              <i data-lucide="check-circle" class="w-14 h-14"></i>
+              <span class="text-xs font-black font-mono">100% CHARGED</span>
+            </div>
+
+            <div class="z-10 flex flex-col items-center justify-center pointer-events-none text-center" id="stage-inner-wrapper">
+              <i data-lucide="paint-bucket" class="w-12 h-12 text-blue-500 mb-3 animate-pulse"></i>
+              <h4 class="font-bold text-gray-800 dark:text-white text-base">1. 배경 테마</h4>
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-2 max-w-[200px] leading-relaxed">이 카드를 손가락이나 마우스로 '꾹' 눌러 100% 충전시키세요!</p>
+            </div>
+          </div>
+        `;
+        lucide.createIcons();
+        bindStep1HoldEvent();
+        return;
+      }
+
+      // 2단계 이상일 때 공통적으로 처리하는 카드 목록 렌더링 시작
+      let layoutWidthClass = simulatorWidthClass;
+      if (currentStep < 19) {
+        layoutWidthClass = "max-w-2xl"; 
+      }
+
+      let gridClass = "flex flex-col gap-4"; 
+      if (currentStep >= 4) {
+        // 4단계 그리드가 활성화되는 순간 가로세로 그리드로 배치가 정렬
+        gridClass = "grid-container grid grid-cols-1 md:grid-cols-2";
+      }
+
+      let innerCards = "";
+      
+      const cardConcepts = [
+        { id: 1, title: "Typography", desc: "텍스트는 정보를 전달하는 가장 강력한 형태이자 디자인의 영혼입니다.", icon: "type" },
+        { id: 2, title: "Visual Hierarchy", desc: "사용자의 시선 흐름 방향과 우선 위계를 지혜롭게 통제합니다.", icon: "layers" },
+        { id: 3, title: "Proportion & Scale", desc: "요소의 상대적 면적 구조를 배치하여 신뢰 가득한 비율을 세웁니다.", icon: "maximize" },
+        { id: 4, title: "Symmetry & Balance", desc: "시각적 혼동을 막는 대칭 구조와 완전한 일관성을 완성합니다.", icon: "grid" }
+      ];
+
+      cardConcepts.forEach((concept, idx) => {
+        let styleAttributes = "";
+        let cardClasses = "raw-box flex flex-col justify-between cursor-pointer relative transition-all duration-500 ";
+        
+        // 5단계 사포 활성화 여부
+        if (currentStep >= 5) {
+          cardClasses += "sandpaper-active ";
+        }
+        // 8단계 커서 효과 호버 상승
+        if (currentStep >= 8) {
+          cardClasses += "hover:-translate-y-1.5 hover:scale-105 hover:z-20 ";
+        }
+        
+        // [10단계 수정 완료] 타이포그래피 스타일 실시간 가공 처리
+        let customFontStyleFamily = selectedFontFamily;
+        let customFontStyleWeight = selectedFontWeight;
+        let customFontSizeClass = 'text-xs';
+        let customTitleSizeClass = 'text-base';
+        
+        if (currentStep >= 10) {
+          if (selectedFontSize === 'text-sm') {
+            customFontSizeClass = 'text-sm';
+            customTitleSizeClass = 'text-lg';
+          } else if (selectedFontSize === 'text-base') {
+            customFontSizeClass = 'text-base';
+            customTitleSizeClass = 'text-xl';
+          }
+        }
+
+        // 12단계 전구 활성 테두리 바인딩
+        if (currentStep >= 12 && activeCardId === concept.id) {
+          cardClasses += "bulb-active-border ";
+        }
+        // 14단계 안경 블러 (평상시에는 흐리지 않도록 초기화)
+        if (currentStep >= 14) {
+          cardClasses += "blur-inactive ";
+        }
+        // 18단계 키보드 탭 가동 아웃라인 링
+        let tabIndexStr = "";
+        if (currentStep >= 18) {
+          cardClasses += "focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ";
+          tabIndexStr = `tabindex="0"`;
+        }
+        // 20단계 빗자루 클린화
+        if (currentStep >= 20) {
+          cardClasses += "minimal-flat ";
+        }
+
+        // 2단계 자석 활성화 전 어지러운 난장판 카드 분산 배치
+        if (currentStep === 2 && !step2Aligned) {
+          const scatteredTransforms = [
+            "transform: translate(-30px, 20px) rotate(-11deg); z-index: 10;",
+            "transform: translate(25px, -15px) rotate(13deg); z-index: 10;",
+            "transform: translate(-15px, -35px) rotate(-7deg); z-index: 10;",
+            "transform: translate(35px, 30px) rotate(9deg); z-index: 10;"
+          ];
+          styleAttributes = scatteredTransforms[idx];
+        }
+
+        // 13단계 도움말 말풍선 수용
+        let tooltipMarkup = "";
+        let tooltipClass = "";
+        if (currentStep >= 13) {
+          tooltipClass = "tooltip-trigger group";
+          tooltipMarkup = `
+            <div class="tooltip-balloon">
+              <strong>[${concept.title}]</strong> ${stepsData[currentStep-1]?.desc || "핵심 도움말 설명이 활성화되었습니다!"}
+            </div>
+          `;
+        }
+
+        // 16단계 스켈레톤 로딩 노출 분기 처리
+        let cardInnerContent = "";
+        if (currentStep >= 16 && isLoadingMode) {
+          cardInnerContent = `
+            <div class="animate-pulse flex flex-col justify-between h-full w-full">
+              <div class="flex justify-between items-center mb-4">
+                <div class="rounded-full bg-slate-300 dark:bg-slate-700 h-10 w-10"></div>
+                <div class="h-4 bg-slate-300 dark:bg-slate-700 rounded w-1/4"></div>
+              </div>
+              <div class="space-y-3">
+                <div class="h-4 bg-slate-300 dark:bg-slate-700 rounded w-3/4"></div>
+                <div class="h-3 bg-slate-300 dark:bg-slate-700 rounded w-full"></div>
+              </div>
+            </div>
+          `;
+        } else {
+          cardInnerContent = `
+            ${tooltipMarkup}
+            <div class="flex justify-between items-start mb-4">
+              <div class="p-2 bg-blue-50 dark:bg-slate-750 text-blue-600 rounded-none transition-all duration-500" id="card-icon-box-${concept.id}">
+                <i data-lucide="${concept.icon}" class="w-6 h-6"></i>
+              </div>
+              <span class="text-xs font-mono text-gray-400">0${concept.id}</span>
+            </div>
+            <div class="${customFontStyleFamily} ${customFontStyleWeight}">
+              <h4 class="font-bold text-gray-800 dark:text-white ${customTitleSizeClass} mb-1">${concept.title}</h4>
+              <p class="text-gray-500 dark:text-gray-400 leading-relaxed ${customFontSizeClass}">${concept.desc}</p>
+            </div>
+            <div class="w-full h-1 mt-4 rounded-full transition-all duration-500 ${currentStep >= 11 ? '' : 'hidden'}" id="card-bar-${concept.id}" style="background-color: var(--primary-color);"></div>
+          `;
+        }
+
+        // 누적 저장된 사포의 곡률 실시간 부여
+        let roundedRadiusStyle = `border-radius: ${cardRadii[concept.id]}px;`;
+
+        innerCards += `
+          <div id="card-${concept.id}" 
+               class="${cardClasses} ${tooltipClass} p-6 min-h-[180px] bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-sm transition-all" 
+               style="${styleAttributes} ${roundedRadiusStyle}"
+               ${tabIndexStr}
+               onclick="onCardClick(event, ${concept.id})">
+            ${cardInnerContent}
+          </div>
+        `;
+      });
+
+      // 2단계 말굽자석 정렬 툴바 제어소
+      let magnetToolbar = "";
+      if (currentStep === 2) {
+        if (!step2Aligned) {
+          magnetToolbar = `
+            <div id="magnet-panel" class="w-full max-w-2xl mb-6 bg-red-50 dark:bg-slate-900 border-2 border-red-200 dark:border-red-900 p-5 rounded-xl text-center flex flex-col items-center gap-3 z-20 shadow-sm animate-bounce">
+              <div class="flex items-center gap-2 text-red-600 dark:text-red-400 font-bold text-base">
+                <i data-lucide="magnet" class="w-6 h-6 animate-pulse"></i> 2단계 말굽자석 정렬 대기 중
+              </div>
+              <p class="text-xs text-red-700 dark:text-red-300 leading-relaxed">카드가 어지럽게 흩어져 제각각 배치되어 있습니다. 자성 도구를 기동하여 중앙에 수렴시키세요!</p>
+              <button onclick="triggerMagnetAlignment()" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-bold text-xs uppercase tracking-widest rounded-lg shadow-md transition-all flex items-center gap-2">
+                <i data-lucide="magnet" class="w-4 h-4"></i> 정렬 자석 활성화
+              </button>
+            </div>
+          `;
+        } else {
+          magnetToolbar = `
+            <div class="w-full max-w-2xl mb-6 bg-green-50 dark:bg-slate-900 border-2 border-green-200 dark:border-green-900 p-5 rounded-xl text-center flex flex-col items-center gap-3 z-20 shadow-sm">
+              <div class="flex items-center gap-2 text-green-600 dark:text-green-400 font-bold text-base">
+                <i data-lucide="check-circle" class="w-6 h-6"></i> 정렬 임무 완수!
+              </div>
+              <button onclick="advanceStep(2)" class="px-6 py-2 bg-black dark:bg-slate-800 text-white font-bold text-xs rounded shadow transition-all uppercase tracking-wider">
+                3단계 줄자 해제하기
+              </button>
+            </div>
+          `;
+        }
+      }
+
+      // [3단계 수정] 패딩 조절계 제거 및 세로 간격 갭 실시간 업데이트 지원 정보창
+      let rulerToolbar = "";
+      if (currentStep >= 3 && currentStep < 20) {
+        let disabledDesc = "";
+        if (currentStep < 4) {
+          disabledDesc = `<span class="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded ml-1 font-sans">💡 1차원 세로 일렬 상태에서는 공간 간격(Gap)이 화면에 보이지 않습니다. 4단계 격자 종이를 활성화하세요!</span>`;
+        } else {
+          disabledDesc = `<span class="text-[10px] text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-950 px-2 py-0.5 rounded ml-1 font-sans">✅ 4단계 그리드가 연동되어 가로세로 2차원 간격이 실시간 반응합니다!</span>`;
+        }
+
+        rulerToolbar = `
+          <div id="ruler-panel" class="w-full max-w-2xl mb-6 bg-amber-50 dark:bg-slate-900/60 border-2 border-amber-200 dark:border-amber-900 p-5 rounded-xl flex flex-col gap-4 z-20 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between text-amber-800 dark:text-amber-400 font-bold text-xs font-mono border-b border-amber-200 dark:border-amber-900 pb-2 gap-2">
+              <span class="flex items-center gap-1.5"><i data-lucide="ruler" class="w-4 h-4 text-amber-600"></i> 3단계 줄자: 요소 사이 간격 (Gap) 조절기</span>
+              <span id="ruler-values" class="bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded text-amber-900 dark:text-amber-300">간격: ${rulerGapVal}px</span>
+            </div>
+            <div class="flex flex-col gap-2">
+              <div class="flex justify-between items-center">
+                <label for="ruler-gap" class="text-[11px] text-amber-700 dark:text-amber-500 font-bold">간격 수치 조작 슬라이더</label>
+                ${disabledDesc}
+              </div>
+              <input type="range" id="ruler-gap" min="8" max="36" value="${rulerGapVal}" class="w-full accent-amber-600 cursor-pointer h-2 bg-amber-200 dark:bg-amber-950 rounded-lg appearance-none">
+            </div>
+          </div>
+        `;
+      }
+
+      // 10단계 붓: 타이포 위계 조작판
+      let typographyToolbar = "";
+      if (currentStep >= 10 && currentStep < 20) {
+        typographyToolbar = `
+          <div id="typo-panel" class="w-full max-w-2xl mb-6 bg-purple-50 dark:bg-slate-900 border-2 border-purple-200 dark:border-purple-900 p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 z-20 shadow-sm">
+            <span class="text-xs font-bold text-purple-800 dark:text-purple-400 flex items-center gap-1">
+              <i data-lucide="brush" class="w-4 h-4 text-purple-600"></i> 10단계 붓: 실시간 타이포 서체 관리
+            </span>
+            <div class="flex gap-2 text-xs">
+              <select id="font-family-select" class="bg-white dark:bg-slate-800 border border-purple-300 dark:border-slate-700 p-1 rounded font-mono text-[11px] text-gray-800 dark:text-gray-100" onchange="changeFontConfig('family', this.value)">
+                <option value="font-sans" ${selectedFontFamily === 'font-sans' ? 'selected' : ''}>Sans (기본고딕)</option>
+                <option value="font-serif" ${selectedFontFamily === 'font-serif' ? 'selected' : ''}>Serif (바탕체)</option>
+                <option value="font-mono" ${selectedFontFamily === 'font-mono' ? 'selected' : ''}>Monospace</option>
+              </select>
+              <select id="font-weight-select" class="bg-white dark:bg-slate-800 border border-purple-300 dark:border-slate-700 p-1 rounded text-[11px] text-gray-800 dark:text-gray-100" onchange="changeFontConfig('weight', this.value)">
+                <option value="font-normal" ${selectedFontWeight === 'font-normal' ? 'selected' : ''}>Normal (400)</option>
+                <option value="font-semibold" ${selectedFontWeight === 'font-semibold' ? 'selected' : ''}>SemiBold (600)</option>
+                <option value="font-black" ${selectedFontWeight === 'font-black' ? 'selected' : ''}>Black (900)</option>
+              </select>
+              <select id="font-size-select" class="bg-white dark:bg-slate-800 border border-purple-300 dark:border-slate-700 p-1 rounded text-[11px] text-gray-800 dark:text-gray-100" onchange="changeFontConfig('size', this.value)">
+                <option value="text-xs" ${selectedFontSize === 'text-xs' ? 'selected' : ''}>Small (작게)</option>
+                <option value="text-sm" ${selectedFontSize === 'text-sm' ? 'selected' : ''}>Medium (중간)</option>
+                <option value="text-base" ${selectedFontSize === 'text-base' ? 'selected' : ''}>Large (크게)</option>
+              </select>
+            </div>
+          </div>
+        `;
+      }
+
+      // 11단계 브랜드 칼라 팔레트 바
+      let paletteToolbar = "";
+      if (currentStep >= 11 && currentStep < 20) {
+        paletteToolbar = `
+          <div class="w-full max-w-2xl mb-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 z-20">
+            <span class="text-xs font-bold text-gray-600 dark:text-gray-400 flex items-center gap-1">
+              <i data-lucide="palette" class="w-4 h-4 text-blue-500"></i> 11단계 브랜드 팔레트 선택:
+            </span>
+            <div class="flex gap-2">
+              ${colorPalette.map(color => `
+                <button class="color-dot w-6 h-6 rounded-full border-2 transition-all hover:scale-125" 
+                        style="background-color: ${color}; border-color: ${selectedColor === color ? '#000' : 'transparent'};"
+                        onclick="changePointColor('${color}')">
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // 16단계 모래시계 로딩 시뮬레이터 바
+      let loadingToolbar = "";
+      if (currentStep >= 16 && currentStep < 20) {
+        loadingToolbar = `
+          <div class="w-full max-w-2xl mb-6 bg-sky-50 dark:bg-slate-900 border border-sky-200 dark:border-sky-900 p-4 rounded-xl flex items-center justify-between gap-4 z-20 shadow-sm">
+            <span class="text-xs font-bold text-sky-800 dark:text-sky-400 flex items-center gap-1.5">
+              <i data-lucide="hourglass" class="w-4 h-4 text-sky-600 animate-spin"></i> 16단계 모래시계: 비동기 로딩 스켈레톤 체험
+            </span>
+            <button onclick="toggleLoadingSimulation()" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-700 active:scale-95 text-white rounded text-xs font-bold transition-all">
+              ${isLoadingMode ? '표준 데이터 보기' : '로딩 중(스켈레톤) 전환'}
+            </button>
+          </div>
+        `;
+      }
+
+      // 19단계 반응형 폭 제어 장치
+      let responsiveToolbar = "";
+      if (currentStep >= 19 && currentStep < 20) {
+        responsiveToolbar = `
+          <div class="w-full max-w-2xl mb-6 bg-teal-50 dark:bg-slate-900 border border-teal-200 dark:border-teal-900 p-4 rounded-xl flex flex-col gap-2 z-20 shadow-sm">
+            <span class="text-xs font-bold text-teal-800 dark:text-teal-400 flex items-center gap-1.5">
+              <i data-lucide="shrink" class="w-4 h-4 text-teal-600"></i> 19단계 고무줄: 뷰포트 스케일 시뮬레이션
+            </span>
+            <div class="grid grid-cols-3 gap-2 text-xs mt-1">
+              <button onclick="changeSimWidth('max-w-md')" class="py-1 px-3 border border-teal-300 dark:border-teal-800 rounded font-bold ${simulatorWidthClass === 'max-w-md' ? 'bg-teal-600 text-white' : 'bg-white dark:bg-slate-800 text-teal-800 dark:text-teal-300'} transition-all">스마트폰 폭</button>
+              <button onclick="changeSimWidth('max-w-2xl')" class="py-1 px-3 border border-teal-300 dark:border-teal-800 rounded font-bold ${simulatorWidthClass === 'max-w-2xl' ? 'bg-teal-600 text-white' : 'bg-white dark:bg-slate-800 text-teal-800 dark:text-teal-300'} transition-all">태블릿 폭</button>
+              <button onclick="changeSimWidth('max-w-5xl')" class="py-1 px-3 border border-teal-300 dark:border-teal-800 rounded font-bold ${simulatorWidthClass === 'max-w-5xl' ? 'bg-teal-600 text-white' : 'bg-white dark:bg-slate-800 text-teal-800 dark:text-teal-300'} transition-all">데스크톱 폭</button>
+            </div>
+          </div>
+        `;
+      }
+
+      // --- [20단계 고유: 원형 휠 플로팅 제어 타워] ---
+      let minimalistControlCenter = "";
+      if (currentStep === 20) {
+        let activeMenuContent = "";
+        
+        // 팝업 나가기 버튼의 크기를 극적으로 확대하여 사용성이 원활하게끔 2.5배 3xl로 대폭 키웠습니다.
+        const popupCloseButton = `<button onclick="togglePopMenu(null)" class="text-3xl font-bold w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">&times;</button>`;
+
+        if (activePopMenu === 'ruler') {
+          activeMenuContent = `
+            <div class="p-5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl animate-fade-in flex flex-col gap-3 max-w-sm w-full font-sans">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-gray-300">
+                <span class="flex items-center gap-1.5 text-amber-600 dark:text-amber-400"><i data-lucide="ruler" class="w-4 h-4"></i> 실시간 격자 여백 변경</span>
+                ${popupCloseButton}
+              </div>
+              <div class="flex flex-col gap-2">
+                <div class="text-[11px] text-slate-500 font-medium flex justify-between">
+                  <span>간격 (Gap): ${rulerGapVal}px</span>
+                </div>
+                <input type="range" id="ruler-gap" min="8" max="36" value="${rulerGapVal}" class="w-full accent-blue-600 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer">
+              </div>
+            </div>
+          `;
+        } else if (activePopMenu === 'typo') {
+          activeMenuContent = `
+            <div class="p-5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl animate-fade-in flex flex-col gap-3 max-w-sm w-full font-sans">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-gray-300">
+                <span class="flex items-center gap-1.5 text-purple-600 dark:text-purple-400"><i data-lucide="brush" class="w-4 h-4"></i> 타이포그래피 정렬</span>
+                ${popupCloseButton}
+              </div>
+              <div class="grid grid-cols-3 gap-1.5 text-[11px]">
+                <select id="font-family-select" class="bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-650 p-1.5 rounded text-slate-700 dark:text-gray-100" onchange="changeFontConfig('family', this.value)">
+                  <option value="font-sans" ${selectedFontFamily === 'font-sans' ? 'selected' : ''}>Sans</option>
+                  <option value="font-serif" ${selectedFontFamily === 'font-serif' ? 'selected' : ''}>Serif</option>
+                  <option value="font-mono" ${selectedFontFamily === 'font-mono' ? 'selected' : ''}>Mono</option>
+                </select>
+                <select id="font-weight-select" class="bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-650 p-1.5 rounded text-slate-700 dark:text-gray-100" onchange="changeFontConfig('weight', this.value)">
+                  <option value="font-normal" ${selectedFontWeight === 'font-normal' ? 'selected' : ''}>Normal</option>
+                  <option value="font-semibold" ${selectedFontWeight === 'font-semibold' ? 'selected' : ''}>SemiBold</option>
+                  <option value="font-black" ${selectedFontWeight === 'font-black' ? 'selected' : ''}>Black</option>
+                </select>
+                <select id="font-size-select" class="bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-650 p-1.5 rounded text-slate-700 dark:text-gray-100" onchange="changeFontConfig('size', this.value)">
+                  <option value="text-xs" ${selectedFontSize === 'text-xs' ? 'selected' : ''}>Small</option>
+                  <option value="text-sm" ${selectedFontSize === 'text-sm' ? 'selected' : ''}>Medium</option>
+                  <option value="text-base" ${selectedFontSize === 'text-base' ? 'selected' : ''}>Large</option>
+                </select>
+              </div>
+            </div>
+          `;
+        } else if (activePopMenu === 'palette') {
+          activeMenuContent = `
+            <div class="p-5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl animate-fade-in flex flex-col gap-3 max-w-sm w-full font-sans">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-gray-300">
+                <span class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400"><i data-lucide="palette" class="w-4 h-4"></i> 액센트 브랜드 색상</span>
+                ${popupCloseButton}
+              </div>
+              <div class="flex gap-2 justify-center py-1">
+                ${colorPalette.map(color => `
+                  <button class="w-6 h-6 rounded-full border-2 transition-all hover:scale-125" 
+                          style="background-color: ${color}; border-color: ${selectedColor === color ? '#000' : 'transparent'};"
+                          onclick="changePointColor('${color}')">
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        } else if (activePopMenu === 'rubber') {
+          activeMenuContent = `
+            <div class="p-5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-2xl rounded-2xl animate-fade-in flex flex-col gap-3 max-w-sm w-full font-sans">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-gray-300">
+                <span class="flex items-center gap-1.5 text-teal-600 dark:text-teal-400"><i data-lucide="shrink" class="w-4 h-4"></i> 고무줄 탄력 뷰포트 변경</span>
+                ${popupCloseButton}
+              </div>
+              <div class="flex flex-col gap-1 text-[11px]">
+                <button onclick="changeSimWidth('max-w-md')" class="py-1.5 px-3 border border-slate-200 dark:border-slate-700 rounded font-semibold ${simulatorWidthClass === 'max-w-md' ? 'bg-slate-900 dark:bg-slate-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-gray-200'} transition-all mb-1">스마트폰 폭 (Mobile)</button>
+                <button onclick="changeSimWidth('max-w-2xl')" class="py-1.5 px-3 border border-slate-200 dark:border-slate-700 rounded font-semibold ${simulatorWidthClass === 'max-w-2xl' ? 'bg-slate-900 dark:bg-slate-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-gray-200'} transition-all mb-1">태블릿 폭 (Tablet)</button>
+                <button onclick="changeSimWidth('max-w-5xl')" class="py-1.5 px-3 border border-slate-200 dark:border-slate-700 rounded font-semibold ${simulatorWidthClass === 'max-w-5xl' ? 'bg-slate-900 dark:bg-slate-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-gray-200'} transition-all">데스크톱 폭 (Desktop)</button>
+              </div>
+            </div>
+          `;
+        }
+
+        // 야간모드 토글을 5번째 휠 다이얼 버튼으로 완벽 정합 배치
+        minimalistControlCenter = `
+          <div id="min-control-center" class="w-full max-w-2xl mb-8 flex flex-col items-center gap-4 z-20 animate-fade-in">
+            <div class="flex items-center gap-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-750 p-2.5 rounded-full shadow-2xl">
+              <button onclick="togglePopMenu('ruler')" class="w-12 h-12 rounded-full flex items-center justify-center transition-all ${activePopMenu === 'ruler' ? 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 scale-110 shadow-md' : 'bg-slate-50 dark:bg-slate-750 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'}" title="간격(줄자)">
+                <i data-lucide="ruler" class="w-5 h-5"></i>
+              </button>
+              <button onclick="togglePopMenu('typo')" class="w-12 h-12 rounded-full flex items-center justify-center transition-all ${activePopMenu === 'typo' ? 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-400 scale-110 shadow-md' : 'bg-slate-50 dark:bg-slate-750 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'}" title="타이포(붓)">
+                <i data-lucide="brush" class="w-5 h-5"></i>
+              </button>
+              <button onclick="togglePopMenu('palette')" class="w-12 h-12 rounded-full flex items-center justify-center transition-all ${activePopMenu === 'palette' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 scale-110 shadow-md' : 'bg-slate-50 dark:bg-slate-750 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'}" title="강조색(팔레트)">
+                <i data-lucide="palette" class="w-5 h-5"></i>
+              </button>
+              <button onclick="togglePopMenu('rubber')" class="w-12 h-12 rounded-full flex items-center justify-center transition-all ${activePopMenu === 'rubber' ? 'bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-400 scale-110 shadow-md' : 'bg-slate-50 dark:bg-slate-750 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'}" title="뷰포트(고무줄)">
+                <i data-lucide="shrink" class="w-5 h-5"></i>
+              </button>
+              <!-- 5번째 야간 모드 연동 휠 조작기 -->
+              <button onclick="toggleThemeMode()" class="w-12 h-12 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-700 text-amber-500 dark:text-sky-400 hover:scale-110 transition-all shadow" title="테마 전환(달)">
+                <i data-lucide="${isDarkMode ? 'sun' : 'moon'}" class="w-5 h-5"></i>
+              </button>
+            </div>
+            <div class="w-full flex justify-center h-0 relative">
+              <div class="absolute bottom-4 z-30 w-full max-w-sm flex justify-center">
+                ${activeMenuContent}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 우하단 무대 밑부분 '다음 진화 단계' 발사판
+      let nextEvolutionControl = "";
+      if (currentStep < maxSteps) {
+        if (currentStep !== 2) { 
+          const nextData = stepsData[currentStep];
+          let clickEventAttr = `onclick="advanceStep(${currentStep})"`;
+          if (currentStep === 19) {
+            // 20단계 피날레 전에는 영화 같은 빗자루 싹쓸이 시네마틱을 소집
+            clickEventAttr = `onclick="triggerBroomCinematic(() => advanceStep(19))"`;
+          }
+
+          nextEvolutionControl = `
+            <div class="mt-8 flex justify-center z-20">
+              <button ${clickEventAttr} class="flex items-center gap-2 px-6 py-3 bg-black dark:bg-slate-800 text-white font-mono text-sm uppercase tracking-wider shadow-lg hover:shadow-xl active:translate-y-0.5 transition-all" style="border-radius: var(--border-radius)">
+                <i data-lucide="${nextData.icon}" class="w-4 h-4"></i> ${currentStep + 1}단계 진화: [${nextData.toolName}]
+              </button>
+            </div>
+          `;
+        }
+      } else {
+        nextEvolutionControl = `
+          <div class="mt-8 flex flex-col items-center z-20 max-w-md text-center bg-green-50 dark:bg-slate-900 border border-green-200 dark:border-green-900 p-6 rounded-xl shadow-md">
+            <i data-lucide="party-popper" class="w-12 h-12 text-green-500 mb-2 animate-bounce"></i>
+            <h4 class="font-bold text-green-800 dark:text-green-400 text-lg">완벽한 정돈의 세계</h4>
+            <p class="text-xs text-green-600 dark:text-green-500 mt-2 leading-relaxed">
+              20단계를 완주하며 모든 기믹이 미니멀리즘 속으로 정리되었습니다. 아래의 타임라인 숫자를 자유롭게 클릭하며 순간이동해보세요!
+            </p>
+          </div>
+        `;
+      }
+
+      canvasContainer.innerHTML = `
+        <div class="w-full flex flex-col items-center transition-all duration-500 ${layoutWidthClass}">
+          ${magnetToolbar}
+          ${rulerToolbar}
+          ${typographyToolbar}
+          ${paletteToolbar}
+          ${loadingToolbar}
+          ${responsiveToolbar}
+          ${minimalistControlCenter}
+          <div id="grid-container" class="${gridClass} w-full">
+            ${innerCards}
+          </div>
+          ${nextEvolutionControl}
+        </div>
+      `;
+
+      lucide.createIcons();
+      initAdvancedInteractions();
+    }
+
+    // 20단계 원형 플로팅 도구 내부 팝업 제어
+    function togglePopMenu(menuType) {
+      activePopMenu = (activePopMenu === menuType) ? null : menuType;
+      renderCanvas();
+    }
+
+    // 2단계 말굽자석 작동 및 강하 정착 시스템 연출
+    function triggerMagnetAlignment() {
+      const magnetObj = document.getElementById('magnet-object');
+      const magnetFieldLines = document.getElementById('magnet-field-lines');
+      
+      if (!magnetObj) return;
+
+      magnetObj.style.top = "60px";
+
+      setTimeout(() => {
+        magnetObj.classList.add('magnet-vibrate');
+        if (magnetFieldLines) magnetFieldLines.style.opacity = "1";
+
+        const cards = document.querySelectorAll('#grid-container .raw-box');
+        cards.forEach(card => {
+          card.style.transition = "all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+          card.style.transform = "scale(1.04) rotate(0deg)";
+          card.style.boxShadow = "0 10px 25px rgba(239, 68, 68, 0.3)"; 
+        });
+
+        setTimeout(() => {
+          magnetObj.classList.remove('magnet-vibrate');
+          if (magnetFieldLines) magnetFieldLines.style.opacity = "0";
+          magnetObj.style.top = "-250px"; 
+
+          setTimeout(() => {
+            step2Aligned = true;
+            renderCanvas();
+          }, 600);
+        }, 1200);
+
+      }, 600);
+    }
+
+    // 10단계 붓: 타이포그래피 설정 변경 반영
+    function changeFontConfig(type, value) {
+      if (type === 'family') selectedFontFamily = value;
+      if (type === 'weight') selectedFontWeight = value;
+      if (type === 'size') selectedFontSize = value;
+      renderCanvas();
+    }
+
+    // 16단계 모래시계 로딩 온오프
+    function toggleLoadingSimulation() {
+      isLoadingMode = !isLoadingMode;
+      renderCanvas();
+    }
+
+    // 19단계 고무줄 화면 축 교정
+    function changeSimWidth(widthClass) {
+      simulatorWidthClass = widthClass;
+      renderCanvas();
+    }
+
+    // 17단계 알림 토스트 출력기
+    function createToast(title) {
+      if (currentStep < 17 || !toastContainer) return; 
+      
+      const toast = document.createElement('div');
+      toast.className = "bg-slate-900 text-white dark:bg-slate-800 dark:border-slate-700 border-2 border-white px-4 py-2.5 shadow-2xl flex items-center gap-2 pointer-events-auto transition-all duration-300 opacity-0 transform translate-y-2";
+      toast.style.borderRadius = "0px";
+      toast.innerHTML = `
+        <i data-lucide="bell" class="w-4 h-4 text-yellow-400 animate-bounce"></i>
+        <span class="text-xs font-bold font-mono">${title} 피드백 정보 송출완료!</span>
+      `;
+      
+      toastContainer.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      }, 50);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y--2');
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 2400);
+    }
+
+    // 다음 진화 단추 동작기
+    function advanceStep(expectedStep) {
+      if (currentStep === expectedStep && currentStep < maxSteps) {
+        currentStep++;
+        updateEvolution();
+        
+        if (currentStep === 13) {
+          showInfoModal(
+            "13단계: 설명 & 툴팁 (Speech Bubble)",
+            "축하합니다! 이제 요소들의 깊이 있는 비하인드 시각 구조론을 감상할 수 있는 '도움말 말풍선'이 부착되었습니다. 각 카드 위에 마우스를 호버링시켜 가이드 창을 사색해 보세요.",
+            13
+          );
+        }
+      }
+    }
+
+    // 11단계 브랜드 칼라 지정
+    function changePointColor(color) {
+      selectedColor = color;
+      document.documentElement.style.setProperty('--primary-color', color);
+      renderCanvas();
+    }
+
+    // 고단계 정밀 상호작용 및 물리 모듈 바인딩
+    function initAdvancedInteractions() {
+      if (currentStep < 2) return;
+
+      const cards = document.querySelectorAll('#grid-container .raw-box');
+
+      // 3단계 이상일 시 줄자 슬라이더 바인딩 연계
+      if (currentStep >= 3) {
+        const gapSlider = document.getElementById('ruler-gap');
+        const rulerValues = document.getElementById('ruler-values');
+
+        const updateSpacing = () => {
+          if (!gapSlider) return;
+          rulerGapVal = parseInt(gapSlider.value);
+          
+          // 오직 4단계 이상일 때만 실제 Grid Gap 값을 캔버스에 주입
+          if (currentStep >= 4) {
+            document.documentElement.style.setProperty('--card-gap', `${rulerGapVal}px`);
+          } else {
+            document.documentElement.style.setProperty('--card-gap', '16px');
+          }
+
+          if (rulerValues) {
+            rulerValues.textContent = `간격: ${rulerGapVal}px`;
+          }
+        };
+
+        if (gapSlider) {
+          gapSlider.addEventListener('input', updateSpacing);
+          updateSpacing(); 
+        }
+      }
+
+      // [5단계 사포 가속화 및 누적식 기전 적용 완료]
+      if (currentStep === 5) {
+        cards.forEach((card, idx) => {
+          let sandInterval = null;
+          const cardId = idx + 1;
+
+          card.addEventListener('mouseenter', () => {
+            if (sandInterval) clearInterval(sandInterval);
+            sandInterval = setInterval(() => {
+              if (cardRadii[cardId] < 12) { 
+                cardRadii[cardId] += 1.5; // 곡률이 사포질되는 양 대폭 인상 (20ms마다 1.5px씩 깎임)
+                if (cardRadii[cardId] > 12) cardRadii[cardId] = 12;
+                card.style.borderRadius = `${cardRadii[cardId]}px`;
+              } else {
+                clearInterval(sandInterval);
+              }
+            }, 15);
+          });
+
+          card.addEventListener('mouseleave', () => {
+            if (sandInterval) {
+              clearInterval(sandInterval);
+              sandInterval = null;
+            }
+          });
+        });
+      }
+
+      // [6단계 수정] 태양의 그림자가 멈출 때만 변하는 것이 아니라, 마우스 무브 실시간 전 과정에 걸쳐 지연 없이 실시간 대동하도록 보완
+      if (currentStep >= 6 && currentStep < 20) {
+        document.addEventListener('mousemove', handleSunShadowRealtime);
+      } else {
+        document.removeEventListener('mousemove', handleSunShadowRealtime);
+      }
+
+      function handleSunShadowRealtime(e) {
+        if (currentStep === 2 && !step2Aligned) return;
+        
+        cards.forEach(card => {
+          const rect = card.getBoundingClientRect();
+          const cardCenterX = rect.left + rect.width / 2;
+          const cardCenterY = rect.top + rect.height / 2;
+
+          const deltaX = cardCenterX - e.clientX;
+          const deltaY = cardCenterY - e.clientY;
+
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          const maxShadowDistance = 15;
+          
+          const shadowX = (deltaX / distance) * Math.min(distance * 0.05, maxShadowDistance);
+          const shadowY = (deltaY / distance) * Math.min(distance * 0.05, maxShadowDistance);
+
+          const blur = Math.min(distance * 0.03, 16) + 4;
+          const opacity = Math.min(0.18, 0.04 + (distance * 0.0001));
+
+          // 딜레이를 주는 무거운 transition 없이 직통으로 실시간 변화 부여
+          card.style.boxShadow = `${shadowX}px ${shadowY}px ${blur}px rgba(0, 0, 0, ${opacity})`;
+        });
+      }
+
+      // [14단계 안경 블러 복원 수정완료]: 진입 초기에 맑게 대기하며 호버 시 다른 요소만 영리하게 침전 흐림 처리
+      if (currentStep >= 14 && currentStep < 20) {
+        document.documentElement.style.setProperty('--blur-amount', '5px');
+        cards.forEach(card => {
+          card.addEventListener('mouseenter', () => {
+            cards.forEach(c => {
+              if (c !== card) {
+                c.classList.add('blur-inactive');
+                c.classList.remove('blur-active');
+              } else {
+                c.classList.add('blur-active');
+                c.classList.remove('blur-inactive');
+              }
+            });
+          });
+
+          card.addEventListener('mouseleave', () => {
+            cards.forEach(c => {
+              c.classList.remove('blur-inactive', 'blur-active');
+            });
+          });
+        });
+      } else {
+        // 14단계 미만 및 20단계 정리 후엔 블러 초기화
+        document.documentElement.style.setProperty('--blur-amount', '0px');
+        cards.forEach(c => {
+          c.classList.remove('blur-inactive', 'blur-active');
+        });
+      }
+
+      // 13단계 말풍선 툴팁 호버 트리거 연동
+      if (currentStep >= 13) {
+        cards.forEach(card => {
+          card.addEventListener('mouseenter', () => card.classList.add('tooltip-active'));
+          card.addEventListener('mouseleave', () => card.classList.remove('tooltip-active'));
+        });
+      }
+    }
+
+    // 카드 터치 혹은 클릭 처리 제어소
+    function onCardClick(e, cardId) {
+      if (e.target.closest('input') || e.target.closest('select') || e.target.closest('button')) return;
+
+      const card = document.getElementById(`card-${cardId}`);
+      if (!card) return;
+
+      // 12단계 전구 점등 타겟 선정
+      if (currentStep >= 12) {
+        activeCardId = cardId;
+        document.querySelectorAll('#grid-container .raw-box').forEach(c => {
+          c.classList.remove('bulb-active-border');
+        });
+        card.classList.add('bulb-active-border');
+      }
+
+      if (currentStep >= 17) {
+        createToast(`Card 0${cardId}`);
+      }
+
+      // [9단계 수정 완료]: 기존 프레임 뚝뚝 끊기던 현상을 쫀득한 밀착 베지에 물리이징 곡선과 미세 지연 연계로 부드럽게 완벽 개선
+      if (currentStep >= 9) {
+        card.style.transform = "scale(0.88) translateY(4px)";
+        card.style.transition = "transform 0.1s cubic-bezier(0.25, 1, 0.5, 1)";
+        
+        setTimeout(() => {
+          card.style.transform = "scale(1.05) translateY(-3px)";
+          card.style.transition = "transform 0.14s cubic-bezier(0.175, 0.885, 0.32, 1.4)";
+          
+          setTimeout(() => {
+            card.style.transform = "";
+            card.style.transition = "transform 0.25s ease"; 
+            fireCardContentOutput(cardId);
+          }, 140);
+        }, 100);
+      } else {
+        fireCardContentOutput(cardId);
+      }
+    }
+
+    // 모달 혹은 사이드 커튼 세부 설명 창 소환 제어
+    function fireCardContentOutput(cardId) {
+      const stepDetail = stepsData[currentStep - 1];
+      const descText = stepsData[currentStep - 1]?.desc || "클릭 반동 피드백이 완벽히 가동되었습니다!";
+
+      if (currentStep >= 15 && curtainTitle && curtainBody && curtainOverlay) {
+        curtainTitle.textContent = `${currentStep}단계: ${stepDetail.title}`;
+        curtainBody.innerHTML = `
+          <div class="space-y-4">
+            <p class="font-bold text-gray-800 dark:text-white text-base">선택된 타겟: Card 0${cardId}</p>
+            <div class="p-3 bg-blue-50 dark:bg-slate-700 border-l-4 border-blue-500 font-mono text-xs text-blue-800 dark:text-blue-200 rounded">
+              "사이드 레이어로 정보를 호출하여 화면 전환 비용을 극단적으로 단축시킵니다."
+            </div>
+            <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">${descText}</p>
+          </div>
+        `;
+        curtainOverlay.classList.remove('translate-x-full');
+      } else {
+        showInfoModal(
+          `${currentStep}단계: ${stepDetail?.title || "상호작용"}`,
+          descText,
+          currentStep
+        );
+      }
+    }
+
+    // 모달창 활성화 및 제어
+    function showInfoModal(title, desc, stepNum) {
+      if (!modalTitle || !modalDesc || !modalMeta || !infoModal || !infoModalContent) return;
+      modalTitle.innerHTML = `<i data-lucide="${stepsData[stepNum-1]?.icon || 'info'}" class="text-blue-600 w-6 h-6 inline-block mr-2"></i> ${title}`;
+      modalDesc.textContent = desc;
+      modalMeta.textContent = `현재 누적 활성화 단계: Step ${stepNum} / 20`;
+
+      infoModal.classList.remove('opacity-0', 'pointer-events-none');
+      infoModalContent.classList.remove('scale-95');
+      infoModalContent.classList.add('scale-100');
+
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      if (!infoModal || !infoModalContent) return;
+      infoModal.classList.add('opacity-0', 'pointer-events-none');
+      infoModalContent.classList.add('scale-95');
+      infoModalContent.classList.remove('scale-100');
+    }
+
+    // 시스템 전체 리셋 기전
+    function triggerFullReset() {
+      currentStep = 0;
+      selectedColor = '#3b82f6';
+      step2Aligned = false;
+      timelineUnlocked = false; 
+      rulerGapVal = 16;
+      cardRadii = { 1: 0, 2: 0, 3: 0, 4: 0 }; 
+      selectedFontFamily = 'font-sans';
+      selectedFontWeight = 'font-normal';
+      selectedFontSize = 'text-xs';
+      activeCardId = null;
+      isLoadingMode = false;
+      simulatorWidthClass = 'max-w-2xl';
+      activePopMenu = null;
+
+      if (curtainOverlay) curtainOverlay.classList.add('translate-x-full');
+      if (toastContainer) toastContainer.innerHTML = "";
+      
+      // 야간 모드 복구 초기화
+      isDarkMode = false;
+      applyDarkModeState();
+      if (nightToggleBtn) nightToggleBtn.classList.add('hidden');
+
+      document.body.style.backgroundColor = '#ffffff';
+      document.documentElement.style.setProperty('--primary-color', '#3b82f6');
+      document.documentElement.style.setProperty('--card-gap', '16px');
+      
+      if (siteLogo) {
+        siteLogo.textContent = "Raw Canvas";
+        siteLogo.className = "text-xl md:text-2xl font-black tracking-wider uppercase";
+      }
+      if (mainHeader) {
+        mainHeader.className = "w-full max-w-5xl mx-auto z-10 flex justify-between items-center py-4 border-b-2 border-black transition-all duration-700";
+      }
+      
+      if (guideTitle && guideDesc) {
+        guideTitle.textContent = "완전히 비어 있는 원시 상태입니다.";
+        guideTitle.className = "text-lg font-bold text-gray-800";
+        guideDesc.textContent = "무언가 일어날 때까지 잠시 기다리거나 상자를 지켜보세요...";
+      }
+      
+      if (badgeStep) badgeStep.textContent = "Step 0 / 20";
+      if (progressPercent) progressPercent.textContent = "0% Evolution";
+
+      if (timelineContainer) {
+        timelineContainer.classList.add('hidden-initially');
+        timelineContainer.classList.remove('visible-step');
+      }
+      if (timelineUnlockTag) timelineUnlockTag.classList.add('hidden');
+      if (resetBtn) resetBtn.classList.add('hidden');
+
+      // 페인트통 도구 복구 및 노출 슬라이딩 동작 실행
+      if (paintBucketTool) {
+        paintBucketTool.style.display = 'flex';
+        paintBucketTool.className = "paint-bucket-sliding bg-blue-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-white hover:scale-110 active:scale-95 transition-transform";
+        setTimeout(() => {
+          paintBucketTool.classList.add('active');
+        }, 150);
+      }
+
+      renderCanvas();
+      renderTimelineLabels();
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>
