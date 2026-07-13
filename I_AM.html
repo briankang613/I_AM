@@ -2290,6 +2290,27 @@
       transform: translateX(-50%) translateY(0);
     }
 
+    /* 툴팁이 상단 조작 UI의 stacking context 아래로 들어가지 않도록
+       활성 카드 자체를 제어판보다 높은 레이어로 승격한다. */
+    #canvas-container,
+    #canvas-container > div,
+    #grid-container {
+      overflow: visible !important;
+    }
+    #grid-container {
+      position: relative;
+      z-index: 30;
+    }
+    #grid-container .raw-box {
+      position: relative;
+    }
+    #grid-container .raw-box.tooltip-active {
+      z-index: 120 !important;
+    }
+    #grid-container .raw-box.tooltip-active .tooltip-balloon {
+      z-index: 130 !important;
+    }
+
     /* 빗자루 쓸기 연출 컨테이너 */
     #broom-cinematic-container {
       position: fixed;
