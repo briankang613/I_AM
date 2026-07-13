@@ -333,8 +333,8 @@
   </header>
 
   <!-- 0단계 전용: 화면 밖에서 나타나는 슬라이딩 페인트통 도구 -->
-  <div id="paint-bucket-tool" class="paint-bucket-sliding bg-blue-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-white hover:scale-110 active:scale-95 transition-transform" onclick="triggerSuckInAnimation()">
-    <i data-lucide="paint-bucket" class="w-10 h-10 animate-bounce"></i>
+  <div id="paint-bucket-tool" class="paint-bucket-sliding bg-blue-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-white hover:scale-110 active:scale-135 transition-transform" onclick="triggerSuckInAnimation()">
+    <i data-lucide="paint-bucket" class="w-20 h-20 animate-bounce"></i>
   </div>
 
   <!-- 메인 워크 랩 -->
@@ -413,6 +413,7 @@
     let step2Aligned = false; 
     let timelineUnlocked = false; 
     let isDarkMode = false;
+    let lightThemeBackground = '#ffffff';
     
     // 이 단계에서 사용자가 도구를 눌렀는지 확인하는 플래그
     let isToolActivatedThisStep = false;
@@ -591,15 +592,9 @@
       } else {
         document.documentElement.classList.remove('dark');
         document.body.classList.remove('dark-mode-theme');
-        // 라이트 모드 전환 시 1단계에서 물들인 색상이 있다면 유지, 그렇지 않으면 기본 화이트 복구
-        if (currentStep >= 1 && !isDarkMode) {
-          // 1단계 충전으로 변화된 소프트 블루 혹은 기본 라이트 배경 세팅
-          document.documentElement.style.setProperty('--bg-color', '#eff6ff');
-          document.body.style.backgroundColor = '#eff6ff';
-        } else {
-          document.documentElement.style.setProperty('--bg-color', '#ffffff');
-          document.body.style.backgroundColor = '#ffffff';
-        }
+        // 다크 모드 이전에 확정된 라이트 테마 배경색을 그대로 복원한다.
+        document.documentElement.style.setProperty('--bg-color', lightThemeBackground);
+        document.body.style.backgroundColor = lightThemeBackground;
         document.documentElement.style.setProperty('--card-bg', '#ffffff');
         document.documentElement.style.setProperty('--text-color', '#1f2937');
         document.documentElement.style.setProperty('--border-color', '#cbd5e1');
@@ -641,14 +636,7 @@
       
       if (stepNum === 20) {
         // 타임라인을 통해 20단계 이동 시에도 즉시 정돈화면 적용
-        triggerBroomCinematic(() => {
-          currentStep = 20;
-          step2Aligned = true;
-          isToolActivatedThisStep = true;
-          isDarkMode = false; // 20단계 기본 라이트모드 고정
-          applyDarkModeState();
-          updateEvolution();
-        });
+        triggerBroomCinematic(completeStep20);
       } else {
         currentStep = stepNum;
         isToolActivatedThisStep = true; 
@@ -659,6 +647,15 @@
         }
         updateEvolution();
       }
+    }
+
+    function completeStep20() {
+      currentStep = 20;
+      step2Aligned = true;
+      isToolActivatedThisStep = true;
+      isDarkMode = false;
+      applyDarkModeState();
+      updateEvolution();
     }
 
     function triggerBroomCinematic(onCompleteCallback) {
@@ -753,98 +750,111 @@
       renderImmersiveTool();
     }
 
-    // 1단계: 배경테마 단일 카드를 마우스로 꾹 누를 때의 물감 충전 효과 및 실시간 배경색 변화
+    // 1단계: 두 번째 코드와 동일하게 목표 배경색은 한 번만 지정하고,
+    // CSS transition이 자연스럽게 보간하도록 처리한다.
     function bindStep1HoldEvent() {
       const box1 = document.getElementById('box-1');
       const holdFiller = document.getElementById('hold-filler');
       const stageSuccessMark = document.getElementById('stage-success-mark');
       const stageInnerWrapper = document.getElementById('stage-inner-wrapper');
-      
-      if (!box1 || !holdFiller) return;
+
+      if (!box1 || !holdFiller || !stageSuccessMark || !stageInnerWrapper) return;
 
       let holdTimer = null;
+      let drainTimer = null;
       let progress = 0;
+      let completed = false;
+
+      const setPageBackground = (color) => {
+        if (isDarkMode) return;
+        document.documentElement.style.setProperty('--bg-color', color);
+        document.body.style.backgroundColor = color;
+      };
+
+      const clearTimers = () => {
+        if (holdTimer) {
+          clearInterval(holdTimer);
+          holdTimer = null;
+        }
+        if (drainTimer) {
+          clearInterval(drainTimer);
+          drainTimer = null;
+        }
+      };
+
+      const completeStep = () => {
+        if (completed) return;
+        completed = true;
+        clearTimers();
+        progress = 100;
+        holdFiller.style.transform = 'scaleY(1)';
+
+        // 최종 배경색을 라이트 테마의 기준색으로 저장해 이후 다크/라이트 전환에도 유지한다.
+        lightThemeBackground = '#dbeafe';
+        setPageBackground(lightThemeBackground);
+
+        stageInnerWrapper.classList.add('opacity-0');
+        stageSuccessMark.classList.remove('hidden');
+
+        requestAnimationFrame(() => {
+          stageSuccessMark.classList.remove('scale-0');
+          stageSuccessMark.classList.add('scale-100');
+        });
+
+        setTimeout(() => {
+          currentStep = 2;
+          isToolActivatedThisStep = false;
+          updateEvolution();
+        }, 700);
+      };
 
       const startHolding = (e) => {
+        if (completed) return;
         e.preventDefault();
-        if (holdTimer) clearInterval(holdTimer);
-        
+        clearTimers();
+
+        // 두 번째 코드처럼 목표색을 한 번만 지정한다.
+        // body의 0.8초 transition이 자연스럽게 색을 보간한다.
+        setPageBackground('#dbeafe');
+
         holdTimer = setInterval(() => {
-          if (progress < 100) {
-            progress += 3; // 누를 때 게이지 충전 속도 조절
-            if (progress > 100) progress = 100;
-            holdFiller.style.transform = `scaleY(${progress / 100})`;
-            
-            // 게이지 충전량에 따라 부드럽게 배경색 실시간 염색 (화이트 -> 연한 파스텔 블루)
-            if (!isDarkMode) {
-              const r = Math.round(255 - (progress * 0.16)); // 255 -> 239
-              const g = Math.round(255 - (progress * 0.09)); // 255 -> 246
-              const b = 255; 
-              const computedColor = `rgb(${r}, ${g}, ${b})`;
-              document.documentElement.style.setProperty('--bg-color', computedColor);
-              document.body.style.backgroundColor = computedColor;
-            }
-          } else {
-            clearInterval(holdTimer);
-            holdTimer = null;
-            
-            stageInnerWrapper.classList.add('opacity-0');
-            stageSuccessMark.classList.remove('hidden');
-            setTimeout(() => {
-              stageSuccessMark.classList.remove('scale-0');
-              stageSuccessMark.classList.add('scale-100');
-            }, 50);
+          progress = Math.min(progress + 3, 100);
+          holdFiller.style.transform = `scaleY(${progress / 100})`;
 
-            // 화면을 꽉 채우는 부드러운 물감 파급 효과
-            paintRipple.style.left = `50%`;
-            paintRipple.style.top = `50%`;
-            paintRipple.style.backgroundColor = isDarkMode ? '#1e1b4b' : '#eff6ff';
-            paintRipple.style.transform = 'scale(150)';
-
-            setTimeout(() => {
-              if (!isDarkMode) {
-                document.documentElement.style.setProperty('--bg-color', '#eff6ff');
-                document.body.style.backgroundColor = '#eff6ff';
-              }
-              paintRipple.style.transform = 'scale(0)';
-              // 완료 후 2단계로 부드럽게 강제 진입
-              currentStep = 2;
-              isToolActivatedThisStep = false; 
-              updateEvolution();
-            }, 800);
+          if (progress >= 100) {
+            completeStep();
           }
         }, 20);
       };
 
       const stopHolding = () => {
+        if (completed) return;
+
         if (holdTimer) {
           clearInterval(holdTimer);
           holdTimer = null;
         }
-        let drain = setInterval(() => {
-          if (progress > 0) {
-            progress -= 5;
-            if (progress < 0) progress = 0;
-            holdFiller.style.transform = `scaleY(${progress / 100})`;
-            
-            // 게이지 빠짐에 비례하여 배경색 다시 복구
-            if (!isDarkMode) {
-              const r = Math.round(239 + ((100 - progress) * 0.16));
-              const g = Math.round(246 + ((100 - progress) * 0.09));
-              const computedColor = `rgb(${r}, ${g}, 255)`;
-              document.documentElement.style.setProperty('--bg-color', computedColor);
-              document.body.style.backgroundColor = computedColor;
-            }
-          } else {
-            clearInterval(drain);
+
+        // 중간에 손을 떼면 배경색도 한 번만 원래 상태로 되돌린다.
+        setPageBackground('#ffffff');
+
+        if (drainTimer) clearInterval(drainTimer);
+        drainTimer = setInterval(() => {
+          progress = Math.max(progress - 5, 0);
+          holdFiller.style.transform = `scaleY(${progress / 100})`;
+
+          if (progress <= 0) {
+            clearInterval(drainTimer);
+            drainTimer = null;
           }
         }, 15);
       };
 
       box1.addEventListener('mousedown', startHolding);
-      box1.addEventListener('touchstart', startHolding);
+      box1.addEventListener('touchstart', startHolding, { passive: false });
       window.addEventListener('mouseup', stopHolding);
       window.addEventListener('touchend', stopHolding);
+      window.addEventListener('touchcancel', stopHolding);
       box1.addEventListener('mouseleave', stopHolding);
     }
 
@@ -852,7 +862,7 @@
       if (!immersiveToolStage) return;
 
       // 이미 이 단계의 도구가 클릭되어 적용되었다면 도구 출현대를 비움
-      if (currentStep === 0 || currentStep > maxSteps || isToolActivatedThisStep) {
+      if (currentStep === 0 || currentStep >= 20 || currentStep > maxSteps || isToolActivatedThisStep) {
         immersiveToolStage.innerHTML = "";
         return;
       }
@@ -952,13 +962,6 @@
           isDarkMode = true;
           applyDarkModeState();
           updateEvolution();
-        } else if (currentStep === 20) {
-          // 20단계 빗자루 도구 사용 시: 쓰는 애니메이션 돌고 즉각 버튼 수동클릭 없이 최종정돈화면 표출
-          triggerBroomCinematic(() => {
-            isDarkMode = false; // 기본은 산뜻한 라이트모드로 고정 설정
-            applyDarkModeState();
-            updateEvolution();
-          });
         } else {
           updateEvolution();
         }
@@ -1409,7 +1412,7 @@
             
             // 19단계에서 20단계 이동 시 빗자루 싹쓸이 연출 연계
             if (currentStep === 19) {
-              clickEventAttr = `onclick="triggerBroomCinematic(() => advanceStep(19))"`;
+              clickEventAttr = `onclick="triggerBroomCinematic(completeStep20)"`;
             }
 
             nextEvolutionControl = `
@@ -1815,6 +1818,7 @@
       if (immersiveToolStage) immersiveToolStage.innerHTML = "";
       
       isDarkMode = false;
+      lightThemeBackground = '#ffffff';
       applyDarkModeState();
       if (nightToggleBtn) nightToggleBtn.classList.add('hidden');
 
