@@ -259,6 +259,150 @@
       border-color: var(--primary-color) !important;
       box-shadow: 0 0 15px var(--primary-color) !important;
     }
+
+
+    /* ===== Mobile responsive stabilization ===== */
+    html { -webkit-text-size-adjust: 100%; }
+    button, [onclick], input, select { touch-action: manipulation; }
+    #canvas-container, #grid-container, #main-content-wrap { min-width: 0; }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 12px !important;
+        min-height: 100svh;
+      }
+
+      #main-header {
+        align-items: flex-start;
+        gap: 10px;
+        padding-top: 8px;
+        padding-bottom: 12px;
+      }
+      #main-header > div:first-child { min-width: 0; flex: 1; }
+      #site-logo {
+        font-size: 1.15rem !important;
+        line-height: 1.25 !important;
+        overflow-wrap: anywhere;
+      }
+      #site-subtitle { font-size: 0.65rem; line-height: 1.35; }
+      #main-header > div:last-child { gap: 6px; flex-shrink: 0; }
+      #badge-step { font-size: 9px; padding: 4px 6px; white-space: nowrap; }
+      #progress-percent { font-size: 9px; white-space: nowrap; }
+
+      #main-content-wrap {
+        justify-content: flex-start;
+        padding-top: 24px !important;
+        padding-bottom: 36px !important;
+      }
+      #guide-message { margin-bottom: 18px; padding: 0 4px; }
+      #guide-title { font-size: 1rem; line-height: 1.4; }
+      #guide-desc { font-size: 0.75rem; line-height: 1.55; }
+      #immersive-tool-stage { min-height: 96px; margin: 6px 0 14px; }
+      #flying-tool-node { max-width: calc(100vw - 32px); text-align: center; }
+
+      #canvas-container { min-height: 240px; align-items: flex-start; }
+      #initial-start-box,
+      #box-1 {
+        width: min(72vw, 270px) !important;
+        height: min(72vw, 270px) !important;
+        min-height: 0 !important;
+      }
+      .raw-box { padding: 18px; min-height: 160px; }
+      #grid-container { grid-template-columns: minmax(0, 1fr) !important; }
+      #grid-container .raw-box {
+        width: 100%;
+        max-width: 100%;
+        transform: none;
+      }
+
+      /* Desktop scattered layout is visually clipped on narrow screens. */
+      body.mobile-layout #grid-container .raw-box {
+        transform: none !important;
+      }
+
+      #ruler-panel, #typo-panel, #magnet-panel,
+      #canvas-container > div > div[class*="max-w-2xl"] {
+        max-width: 100%;
+      }
+      #typo-panel { align-items: stretch; }
+      #typo-panel > div { width: 100%; display: grid; grid-template-columns: 1fr; }
+      #typo-panel select { width: 100%; min-height: 40px; font-size: 12px; }
+      #ruler-panel { padding: 16px; }
+      #ruler-panel label + span { display: none; }
+
+      .color-dot { width: 30px !important; height: 30px !important; }
+      #min-control-center > div:first-child {
+        width: 100%;
+        justify-content: space-between;
+        gap: 4px;
+        padding: 7px;
+      }
+      #min-control-center > div:first-child button {
+        width: 42px !important;
+        height: 42px !important;
+        flex: 0 0 42px;
+      }
+      #min-control-center .absolute.bottom-4 {
+        position: fixed !important;
+        left: 12px;
+        right: 12px;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        width: auto !important;
+        max-width: none !important;
+        z-index: 90;
+      }
+
+      #timeline-container { margin-top: 34px; }
+      #timeline-steps-labels { grid-template-columns: repeat(10, minmax(0, 1fr)); row-gap: 8px; }
+      #timeline-unlock-tag { display: none; }
+
+      #toast-container {
+        top: max(12px, env(safe-area-inset-top));
+        width: calc(100vw - 24px);
+      }
+      #toast-container > div { width: 100%; font-size: 12px; }
+      #curtain-overlay { padding: 18px; overflow-y: auto; }
+      #info-modal { padding: 12px; }
+      #info-modal-content { max-height: calc(100svh - 24px); overflow-y: auto; padding: 20px; }
+
+      #paint-bucket-tool.active {
+        left: 16px;
+        bottom: max(16px, env(safe-area-inset-bottom));
+      }
+      #paint-bucket-tool { padding: 12px; }
+      #paint-bucket-tool svg { width: 52px !important; height: 52px !important; }
+      #magnet-object { width: 132px !important; height: 132px !important; }
+      #sweeper-object { width: 220px !important; height: 220px !important; }
+
+      .tooltip-balloon {
+        left: 8px;
+        right: 8px;
+        bottom: calc(100% + 8px);
+        width: auto;
+        white-space: normal;
+        transform: translateY(8px);
+        text-align: left;
+      }
+      .tooltip-balloon::after { left: 28px; transform: none; }
+      .tooltip-active .tooltip-balloon { transform: translateY(0); }
+
+      /* Prevent hover-only visual states from sticking after a tap. */
+      .minimal-flat:hover { transform: none !important; }
+    }
+
+    @media (hover: none), (pointer: coarse) {
+      .raw-box:hover, #flying-tool-node:hover, button:hover { transform: none; }
+      .blur-active { transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between p-4 md:p-8 relative selection:bg-blue-200">
@@ -474,6 +618,9 @@
     ];
 
     window.addEventListener('DOMContentLoaded', () => {
+      const syncMobileLayout = () => document.body.classList.toggle('mobile-layout', window.matchMedia('(max-width: 640px)').matches);
+      syncMobileLayout();
+      window.addEventListener('resize', syncMobileLayout, { passive: true });
       canvasContainer = document.getElementById('canvas-container');
       paintBucketTool = document.getElementById('paint-bucket-tool');
       paintRipple = document.getElementById('paint-ripple');
@@ -850,12 +997,17 @@
         }, 15);
       };
 
-      box1.addEventListener('mousedown', startHolding);
-      box1.addEventListener('touchstart', startHolding, { passive: false });
-      window.addEventListener('mouseup', stopHolding);
-      window.addEventListener('touchend', stopHolding);
-      window.addEventListener('touchcancel', stopHolding);
-      box1.addEventListener('mouseleave', stopHolding);
+      box1.style.touchAction = 'none';
+      box1.addEventListener('pointerdown', (e) => {
+        try { box1.setPointerCapture(e.pointerId); } catch (_) {}
+        startHolding(e);
+      });
+      box1.addEventListener('pointerup', stopHolding);
+      box1.addEventListener('pointercancel', stopHolding);
+      box1.addEventListener('lostpointercapture', stopHolding);
+      box1.addEventListener('pointerleave', (e) => {
+        if (e.pointerType === 'mouse') stopHolding();
+      });
     }
 
     function renderImmersiveTool() {
@@ -1283,7 +1435,7 @@
             <span class="text-xs font-bold text-teal-800 dark:text-teal-400 flex items-center gap-1.5">
               <i data-lucide="shrink" class="w-4 h-4 text-teal-600"></i> 19단계 고무줄: 뷰포트 스케일 시뮬레이션
             </span>
-            <div class="grid grid-cols-3 gap-2 text-xs mt-1">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs mt-1">
               <button onclick="changeSimWidth('max-w-md')" class="py-1 px-3 border border-teal-300 dark:border-teal-800 rounded font-bold ${simulatorWidthClass === 'max-w-md' ? 'bg-teal-600 text-white' : 'bg-white dark:bg-slate-800 text-teal-800 dark:text-teal-300'} transition-all font-mono">스마트폰 폭</button>
               <button onclick="changeSimWidth('max-w-2xl')" class="py-1 px-3 border border-teal-300 dark:border-teal-800 rounded font-bold ${simulatorWidthClass === 'max-w-2xl' ? 'bg-teal-600 text-white' : 'bg-white dark:bg-slate-800 text-teal-800 dark:text-teal-300'} transition-all font-mono">태블릿 폭</button>
               <button onclick="changeSimWidth('max-w-5xl')" class="py-1 px-3 border border-teal-300 dark:border-teal-800 rounded font-bold ${simulatorWidthClass === 'max-w-5xl' ? 'bg-teal-600 text-white' : 'bg-white dark:bg-slate-800 text-teal-800 dark:text-teal-300'} transition-all font-mono">데스크톱 폭</button>
@@ -1417,7 +1569,7 @@
 
             nextEvolutionControl = `
               <div class="mt-8 flex justify-center z-20 animate-fade-in">
-                <button ${clickEventAttr} class="flex items-center gap-2 px-6 py-3 bg-black dark:bg-slate-800 text-white font-mono text-sm uppercase tracking-wider shadow-lg hover:shadow-xl active:translate-y-0.5 transition-all" style="border-radius: var(--border-radius)">
+                <button ${clickEventAttr} class="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-black max-w-full text-center whitespace-normal dark:bg-slate-800 text-white font-mono text-sm uppercase tracking-wider shadow-lg hover:shadow-xl active:translate-y-0.5 transition-all" style="border-radius: var(--border-radius)">
                   <i data-lucide="${nextData.icon}" class="w-4 h-4"></i> ${currentStep + 1}단계 진화: [${nextData.toolName}]
                 </button>
               </div>
@@ -1482,6 +1634,31 @@
         if (magnetFieldLines) magnetFieldLines.style.opacity = "1";
 
         const cards = document.querySelectorAll('#grid-container .raw-box');
+
+      const isTouchLayout = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+      if (isTouchLayout) {
+        cards.forEach((card, idx) => {
+          card.addEventListener('pointerup', () => {
+            const cardId = idx + 1;
+            if (currentStep === 5 && isToolActivatedThisStep) {
+              cardRadii[cardId] = 12;
+              card.style.borderRadius = '12px';
+            }
+            if (currentStep >= 13) {
+              const wasOpen = card.classList.contains('tooltip-active');
+              cards.forEach(c => c.classList.remove('tooltip-active', 'blur-active', 'blur-inactive'));
+              if (!wasOpen) card.classList.add('tooltip-active');
+            }
+            if (currentStep >= 14 && currentStep < 20) {
+              cards.forEach(c => {
+                if (c === card) c.classList.add('blur-active');
+                else c.classList.add('blur-inactive');
+              });
+            }
+          });
+        });
+      }
+
         cards.forEach(card => {
           card.style.transition = "all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
           card.style.transform = "scale(1.04) rotate(0deg)";
@@ -1643,7 +1820,7 @@
       }
 
       // 6단계 태양 / 20단계 빗자루: 마우스의 매 미세 움직임마다 그림자가 부드러우면서도 실시간으로 즉시 따라붙음
-      if ((currentStep >= 6 && currentStep < 20) || (currentStep === 20 && isToolActivatedThisStep)) {
+      if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && ((currentStep >= 6 && currentStep < 20) || (currentStep === 20 && isToolActivatedThisStep))) {
         document.addEventListener('mousemove', handleSunShadowRealtime);
       } else {
         document.removeEventListener('mousemove', handleSunShadowRealtime);
